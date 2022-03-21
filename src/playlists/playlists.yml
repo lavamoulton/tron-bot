@@ -1,0 +1,26 @@
+playlists:
+  fort:
+    name: 'Fortress'
+    players: 12
+    draft: true
+    description: 'Fortress 6v6'
+  tst:
+    name: 'TST'
+    players: 8
+    draft: false
+    description: 'Team Sumo 2v2v2v2'
+  wst:
+    name: 'WST'
+    players: 6
+    draft: true
+    description: 'War Sumo 3v3'
+  ctf:
+    name: 'CTF'
+    players: 8
+    draft: true
+    description: 'Capture the flag 4v4'
+  sumobar:
+    name: 'Sumobar'
+    players: 8
+    draft: false
+    description: 'Sumobar 8 players'
