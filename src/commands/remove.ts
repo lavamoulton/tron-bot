@@ -2,14 +2,14 @@ import { ICommand } from "../interfaces/Command";
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { pl } from "../playlists/playlists";
 
-export const add: ICommand = {
+export const remove: ICommand = {
     data: new SlashCommandBuilder()
-        .setName("add")
-        .setDescription("Add to specified playlist(s)")
+        .setName("remove")
+        .setDescription("Remove from specified playlist(s)")
         .addStringOption((option) =>
             option 
                 .setName("playlists")
-                .setDescription("Playlists to add to")
+                .setDescription("Playlists to remove from")
                 .setChoices(pl.loadChoices())
                 .setRequired(true)
         ),
@@ -17,8 +17,8 @@ export const add: ICommand = {
         const { user } = interaction;
         const text = interaction.options.getString("playlists", true);
 
-        let result = pl.addToPlaylist(text, user, playlists);
-        await interaction.reply(`${result}`);
+        let result = pl.removeFromPlaylist(text, user, playlists);
+        await interaction.reply(`${result}`);      
     },
     runMessage: async (message, playlists) => {
         const { author } = message;
@@ -27,13 +27,14 @@ export const add: ICommand = {
         let result = ``;
 
         if (options.length === 0) {
-            result += pl.addToPlaylist('fort', author, playlists);
-            result += pl.addToPlaylist('tst', author, playlists);
-            await message.channel.send(`${result}`);
+            for (let i in playlists) {
+                pl.removeFromPlaylist(i, author, playlists);
+            }
+            await message.channel.send(`${pl.printPlaylists(playlists, false)}`);
         } else {
             for (let i in options) {
                 let option = options[i];
-                result += pl.addToPlaylist(option, author, playlists);
+                result += pl.removeFromPlaylist(option, author, playlists);
             }
             await message.channel.send(`${result}`);
         }

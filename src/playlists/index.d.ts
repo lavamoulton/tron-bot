@@ -1,3 +1,7 @@
+interface IPlaylists {
+    [name: string]: IPlaylist,
+}
+
 interface IPlaylist {
     name: string,
     players: number,

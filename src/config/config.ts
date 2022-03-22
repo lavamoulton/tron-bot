@@ -7,6 +7,7 @@ let config = {
     ENVIRONMENT: process.env.environment,
     INTENT_OPTIONS: ["GUILDS"],
     PREFIX: '!',
+    ALLOWED_CHANNELS: ["bot-experiments"],
 }
 
 export { config };
