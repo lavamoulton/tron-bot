@@ -13,7 +13,8 @@ function loadPlaylists(): IPlaylists {
             playlists[name] = new Playlist(pFileLists[name].name, pFileLists[name].players, pFileLists[name].draft, pFileLists[name].description);
         }
         return playlists;
-    } catch (e) {
+    } 
+    catch (e) {
         console.log(e);
         return {};
     }
@@ -45,7 +46,7 @@ function removeFromPlaylist(name: string, user: User, playlists: IPlaylists): st
     if (playlists[name].removePlayer(user)) {
         return playlists[name].printList();
     } else {
-        return `${user}, you are not added to ${name}!`;
+        return `${user}, you are not added to ${name}!\n`;
     }
 }
 
@@ -118,7 +119,17 @@ function getTST(playerList: string[]): string {
 
 function getSumobar(playerList: string[]): string {
     let map = playerList.map(player => `<@${playerList[playerList.indexOf(player)]}>`);
-    return `Sumobar: ${map}`;
+    let first = true;
+    let result = ``;
+    map.forEach((player) => {
+        if (!first) {
+            result += `, `;
+        } else {
+            first = false; 
+        }
+        result += player;
+    });
+    return `Sumobar: ${result}`;
 }
 
 function shuffle(array: any[]) {
@@ -132,7 +143,7 @@ function shuffle(array: any[]) {
 }
 
 function getAddedPlayers(playlists: IPlaylists): string {
-    let result = `No players added`;
+    let result = `No players added.`;
     let first = true;
     for (let i in playlists) {
         let playlist = playlists[i];

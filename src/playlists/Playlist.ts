@@ -1,5 +1,24 @@
 import { User } from "discord.js";
 
+interface IPlaylist {
+    name: string,
+    players: number,
+    draft: boolean,
+    description: string,
+    list: { [id: string]: IAddedUser },
+    addPlayer(user: User): boolean,
+    removePlayer(user: User): boolean,
+    isPlayerAdded(user: User): boolean,
+    isFull(): boolean,
+    isEmpty(): boolean,
+    printList(): string,
+}
+
+interface IAddedUser {
+    id: string,
+    displayName: string,
+}
+
 /**
  * Represents a Playlist that users can add/remove from
  */

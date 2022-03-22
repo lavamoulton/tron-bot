@@ -1,15 +1,14 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist/test"
+    "outDir": "dist/build",
+
   },
   "files": [
     "src/index.ts",
     "src/playlists/index.d.ts"
   ],
   "include": [
-    "src/**/*.ts",
-    "src/*.ts",
-    "tests/**/*.test.ts"
-  ],
+    "src/**/*.ts"
+  ]
 }
