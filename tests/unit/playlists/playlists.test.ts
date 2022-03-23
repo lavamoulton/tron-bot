@@ -1,9 +1,7 @@
-import { User } from "discord.js";
 import "jest";
 import { Playlist } from "../../../src/playlists/Playlist";
 import { pl } from "../../../src/playlists/playlists";
-import { CommandList } from "../../../src/commands/_CommandList";
-import { MockDiscord, MockData, fillList } from "../../helpers/mockDiscord";
+import { MockData } from "../../helpers/mockDiscord";
 
 describe('playlist tests', () => {
     test('initial data', () => {

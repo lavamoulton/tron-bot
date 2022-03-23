@@ -50,7 +50,7 @@ export class Playlist implements IPlaylist {
         }
     }
 
-    removePlayer(user: User): boolean {
+    removePlayer(user: User | IAddedUser): boolean {
         if (this.list.hasOwnProperty(user.id)) {
             delete this.list[user.id];
             return true;
@@ -59,7 +59,7 @@ export class Playlist implements IPlaylist {
         }
     }
 
-    isPlayerAdded(user: User): boolean {
+    isPlayerAdded(user: User | IAddedUser): boolean {
         if (this.list.hasOwnProperty(user.id)) {
             return true;
         } else {
@@ -93,6 +93,10 @@ export class Playlist implements IPlaylist {
         } else {
             return false;
         }
+    }
+
+    clearList() {
+        this.list = {};
     }
 
     printList() {

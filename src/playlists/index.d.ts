@@ -15,6 +15,7 @@ interface IPlaylist {
     isDraft(): boolean,
     isFull(): boolean,
     isEmpty(): boolean,
+    clearList(): void,
     printList(): string,
 }
 

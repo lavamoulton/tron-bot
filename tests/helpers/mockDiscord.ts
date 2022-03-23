@@ -1,4 +1,3 @@
-import { config } from "../../src/config/config";
 import { 
     Client, CommandInteraction, Guild, GuildMember, Message, Channel, TextChannel, User, GuildChannel, ApplicationCommandData
 } from "discord.js";

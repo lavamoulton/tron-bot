@@ -56,18 +56,35 @@ function startPlaylist(name: string, playlists: IPlaylists): string {
     if (playlists[name].draft) {
         console.log(`Player list: ${playerList}`);
         result += getDraft(playerList);
+        clearPlaylists(name, playlists);
         return result;
     }
     if (name === 'tst') {
         result += getTST(playerList);
+        clearPlaylists(name, playlists);
         return result;
     }
     if (name === 'sumobar') {
         result += getSumobar(playerList);
+        clearPlaylists(name, playlists);
         return result;
     }
 
     return `Playlist could not be started`;
+}
+
+function clearPlaylists(name: string, playlists: IPlaylists) {
+    let playerList = playlists[name].list;
+    for (let i in playerList) {
+        let player = playerList[i];
+        for (let listName in playlists) {
+            let tempList = playlists[listName];
+            if (tempList.isPlayerAdded(player)) {
+                tempList.removePlayer(player);
+            }
+        }
+    }
+    playlists[name].clearList();
 }
 
 async function fillList(name: string, guild: Guild, playlists: IPlaylists, captains: string[]): Promise<void> {

@@ -8,7 +8,7 @@ export const onMessage = async (message: Message, playlists: IPlaylists, captain
 
     if (message.channel.type === "GUILD_TEXT") {
         let channel = message.channel;
-        if (channel.name !== 'bot-experiments') {
+        if (channel.name !== 'pickup') {
             return;
         }
     } else {

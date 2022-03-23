@@ -11,7 +11,6 @@ export const add: ICommand = {
                 .setName("playlists")
                 .setDescription("Playlists to add to")
                 .setChoices(pl.loadChoices())
-                .setRequired(true)
         ),
     run: async (interaction, playlists) => {
         const { user } = interaction;
