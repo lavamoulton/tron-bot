@@ -22,7 +22,11 @@ export const onMessage = async (message: Message, playlists: IPlaylists, captain
     let commandName = message.content.toLowerCase().split(" ")[0].slice(1);
     for (const Command of CommandList) {
         if (commandName === Command.data.name) {
-            await Command.runMessage(message, playlists, captains);
+            try {
+                await Command.runMessage(message, playlists, captains);
+            } catch (e) {
+                console.error(e);
+            }
         }
     }
 };

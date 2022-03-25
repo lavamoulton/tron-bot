@@ -5,8 +5,12 @@ export const onInteraction = async (interaction: Interaction, playlists: IPlayli
     if (interaction.isCommand()) {
         for (const Command of CommandList) {
             if (interaction.commandName === Command.data.name) {
-                await Command.run(interaction, playlists, captains);
-                break;
+                try {
+                    await Command.run(interaction, playlists, captains);
+                    break;
+                } catch (e) {
+                    console.error(e);
+                }
             }
         }
     }

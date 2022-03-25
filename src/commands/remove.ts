@@ -34,7 +34,9 @@ export const remove: ICommand = {
         } else {
             for (let i in options) {
                 let option = options[i];
-                result += pl.removeFromPlaylist(option, author, playlists);
+                if (option in playlists) {
+                    result += pl.removeFromPlaylist(option, author, playlists);
+                }
             }
             await message.channel.send(`${result}`);
         }

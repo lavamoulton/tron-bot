@@ -55,17 +55,17 @@ function startPlaylist(name: string, playlists: IPlaylists): string {
     let playerList = shuffle(Object.keys(playlists[name].list));
     if (playlists[name].draft) {
         console.log(`Player list: ${playerList}`);
-        result += getDraft(playerList);
+        result += `${getDraft(playerList)}\n`;
         clearPlaylists(name, playlists);
         return result;
     }
     if (name === 'tst') {
-        result += getTST(playerList);
+        result += `${getTST(playerList)}\n`;
         clearPlaylists(name, playlists);
         return result;
     }
     if (name === 'sumobar') {
-        result += getSumobar(playerList);
+        result += `${getSumobar(playerList)}\n`;
         clearPlaylists(name, playlists);
         return result;
     }

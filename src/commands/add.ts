@@ -32,7 +32,9 @@ export const add: ICommand = {
         } else {
             for (let i in options) {
                 let option = options[i];
-                result += pl.addToPlaylist(option, author, playlists);
+                if (option in playlists) {
+                    result += pl.addToPlaylist(option, author, playlists);
+                }
             }
             await message.channel.send(`${result}`);
         }
