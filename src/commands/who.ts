@@ -17,3 +17,19 @@ export const who: ICommand = {
         await message.channel.send(`${result}`);
     }
 };
+
+export const whowhen: ICommand = {
+    data: new SlashCommandBuilder()
+        .setName("whowhen")
+        .setDescription("Display who is added and when"),
+    run: async (interaction, playlists) => {
+        const { user } = interaction;
+
+        let result = pl.getAddedPlayersAndWhen(playlists);
+        await interaction.reply(`${result}`);
+    },
+    runMessage: async (message, playlists) => {
+        let result = pl.getAddedPlayersAndWhen(playlists);
+        await message.channel.send(`${result}`);
+    }
+};

@@ -176,6 +176,23 @@ function getAddedPlayers(playlists: IPlaylists): string {
     return result;
 }
 
+function getAddedPlayersAndWhen(playlists: IPlaylists): string {
+    let result = `No players added.`;
+    let first = true;
+    for (let i in playlists) {
+        let playlist = playlists[i];
+        if (!playlist.isEmpty()) {
+            if (first) {
+                result = playlist.printDetailedList();
+                first = false;
+            } else {
+                result += playlist.printDetailedList();
+            }
+        }
+    }
+    return result;
+}
+
 /**
  * 
  * @param playlists Current playlist objects
@@ -209,4 +226,5 @@ export const pl = {
     fillList,
     getAddedPlayers,
     printPlaylists,
+    getAddedPlayersAndWhen,
 }

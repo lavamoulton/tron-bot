@@ -12,11 +12,13 @@ interface IPlaylist {
     isFull(): boolean,
     isEmpty(): boolean,
     printList(): string,
+    printDetailedList(): string,
 }
 
 interface IAddedUser {
     id: string,
     displayName: string,
+    addedAt: Date,
 }
 
 /**
@@ -40,11 +42,13 @@ export class Playlist implements IPlaylist {
 
     addPlayer(user: User): boolean {
         if (this.isPlayerAdded(user)) {
+            this.refreshPlayerAddedAt(user);
             return false;
         } else {
             this.list[user.id] = {
                 id: user.id,
                 displayName: user.username,
+                addedAt: new Date(),
             };
             return true;
         }
@@ -65,6 +69,10 @@ export class Playlist implements IPlaylist {
         } else {
             return false;
         }
+    }
+
+    refreshPlayerAddedAt(user: User | IAddedUser): void {
+        this.list[user.id].addedAt = new Date();
     }
 
     isDraft(): boolean {
@@ -99,7 +107,7 @@ export class Playlist implements IPlaylist {
         this.list = {};
     }
 
-    printList() {
+    printList() : string {
         let result = `${this.name} (${this.getLength()} / ${this.players}): `;
         if (this.isEmpty()) {
             result += `No players added.`
@@ -110,6 +118,24 @@ export class Playlist implements IPlaylist {
                 result += ', ';
             }
             result += `${this.list[ID].displayName}`;
+            first = false;
+        }
+        result += `\n`;
+        return result;
+    }
+
+    printDetailedList() : string {
+        let result = `${this.name} (${this.getLength()} / ${this.players}): `;
+        if (this.isEmpty()) {
+            result += `No players added.`
+        }
+        let first = true;
+        for (let ID in this.list) {
+            if (!first) {
+                result += ', ';
+            }
+            result += `**${this.list[ID].displayName}**`;
+            result += ` (<t:${(this.list[ID].addedAt.getTime()/1000).toFixed(0)}:R>)`;
             first = false;
         }
         result += `\n`;
