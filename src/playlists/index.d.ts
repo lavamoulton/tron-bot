@@ -17,6 +17,7 @@ interface IPlaylist {
     isEmpty(): boolean,
     clearList(): void,
     printList(): string,
+    printDetailedList(): string,
 }
 
 interface IAddedUser {
