@@ -13,18 +13,23 @@ interface IPlaylist {
     isEmpty(): boolean,
     printList(): string,
     printDetailedList(): string,
+    warnAndExpirePlayers(channel: any): void,
 }
 
 interface IAddedUser {
     id: string,
     displayName: string,
     addedAt: Date,
+    warned: boolean,
 }
 
 /**
  * Represents a Playlist that users can add/remove from
  */
 export class Playlist implements IPlaylist {
+    
+    static EXPIRE_AFTER_TIME_IN_MINUES = parseInt(<string>process.env.EXPIRE_AFTER_TIME_IN_MINUES, 10) || 60;
+    static WARN_AFTER_TIME_IN_MINUES = parseInt(<string>process.env.WARN_AFTER_TIME_IN_MINUES, 10) || 50;
 
     name: string
     players: number
@@ -49,6 +54,7 @@ export class Playlist implements IPlaylist {
                 id: user.id,
                 displayName: user.username,
                 addedAt: new Date(),
+                warned: false
             };
             return true;
         }
@@ -73,6 +79,36 @@ export class Playlist implements IPlaylist {
 
     refreshPlayerAddedAt(user: User | IAddedUser): void {
         this.list[user.id].addedAt = new Date();
+        this.list[user.id].warned = false;
+    }
+
+    warnAndExpirePlayers(channel: any): void {
+        this.expirePlayers(channel);
+        this.warnPlayersNearExpiry(channel);
+    }
+
+    expirePlayers(channel: any): void {
+        let playerIDsToDelete: string[] = [];
+        for (let ID in this.list) {
+            let player = this.list[ID];
+            if (Date.now() - new Date(player.addedAt).getTime() > Playlist.EXPIRE_AFTER_TIME_IN_MINUES * 60 * 1000) {
+                channel.send(`Removing <@${ID}> from ${this.name} due to auto removal after ${Playlist.EXPIRE_AFTER_TIME_IN_MINUES} minutes.`);
+                playerIDsToDelete.push(ID);
+            }
+        }
+        for (let stringId of playerIDsToDelete) {
+            delete this.list[stringId];
+        }
+    }
+
+    warnPlayersNearExpiry(channel: any): void {
+        for (let ID in this.list) {
+            let player = this.list[ID];
+            if (Date.now() - new Date(player.addedAt).getTime() > Playlist.WARN_AFTER_TIME_IN_MINUES * 60 * 1000 && player.warned === false) {
+                channel.send(`<@${ID}> will be auto removed from ${this.name} soon. Please add again to reset your timer.`);
+                player.warned = true;
+            }
+        }
     }
 
     isDraft(): boolean {
