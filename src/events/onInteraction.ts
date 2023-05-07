@@ -1,5 +1,6 @@
 import { Interaction } from "discord.js";
 import { CommandList } from "../commands/_CommandList";
+import { IPlaylists } from "../playlists";
 
 export const onInteraction = async (interaction: Interaction, playlists: IPlaylists, captains: string[]) => {
     if (interaction.isCommand()) {

@@ -1,6 +1,7 @@
 import { Message } from "discord.js";
 import { CommandList } from "../commands/_CommandList";
 import { config } from "../config/config";
+import { IPlaylists } from "../playlists";
 
 export const onMessage = async (message: Message, playlists: IPlaylists, captains: string[]) => {
     const content = message.content;

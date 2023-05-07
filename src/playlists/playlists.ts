@@ -2,6 +2,7 @@ import * as yaml from "js-yaml";
 import * as fs from "fs";
 import { Playlist } from "./Playlist";
 import { Guild, User } from "discord.js";
+import { IPlaylists } from ".";
 
 function loadPlaylists(): IPlaylists {
     const playlists: IPlaylists = {};
@@ -38,7 +39,7 @@ function addToPlaylist(name: string, user: User, playlists: IPlaylists): string 
             return playlists[name].printList();
         }
     } else {
-        return `${user}, you are already added to ${name}!\n`;
+        return `${user}, you are already added to ${name}! Refreshing your added at time for auto removal.\n`;
     }
 }
 

@@ -18,6 +18,7 @@ interface IPlaylist {
     clearList(): void,
     printList(): string,
     printDetailedList(): string,
+    warnAndExpirePlayers(channel: DMChannel): void,
 }
 
 interface IAddedUser {
