@@ -1,41 +1,42 @@
 import { User } from "discord.js";
 
 interface IPlaylist {
-    name: string,
-    players: number,
-    draft: boolean,
-    description: string,
-    list: { [id: string]: IAddedUser },
-    addPlayer(user: User): boolean,
-    removePlayer(user: User): boolean,
-    isPlayerAdded(user: User): boolean,
-    isFull(): boolean,
-    isEmpty(): boolean,
-    printList(): string,
-    printDetailedList(): string,
-    warnAndExpirePlayers(channel: any): void,
+    name: string;
+    players: number;
+    draft: boolean;
+    description: string;
+    list: { [id: string]: IAddedUser };
+    addPlayer(user: User): boolean;
+    removePlayer(user: User): boolean;
+    isPlayerAdded(user: User): boolean;
+    isFull(): boolean;
+    isEmpty(): boolean;
+    printList(): string;
+    printDetailedList(): string;
+    warnAndExpirePlayers(channel: any): void;
 }
 
 interface IAddedUser {
-    id: string,
-    displayName: string,
-    addedAt: Date,
-    warned: boolean,
+    id: string;
+    displayName: string;
+    addedAt: Date;
+    warned: boolean;
 }
 
 /**
  * Represents a Playlist that users can add/remove from
  */
 export class Playlist implements IPlaylist {
-    
-    static EXPIRE_AFTER_TIME_IN_MINUES = parseInt(<string>process.env.EXPIRE_AFTER_TIME_IN_MINUES, 10) || 60;
-    static WARN_AFTER_TIME_IN_MINUES = parseInt(<string>process.env.WARN_AFTER_TIME_IN_MINUES, 10) || 50;
+    static EXPIRE_AFTER_TIME_IN_MINUTES =
+        parseInt(<string>process.env.EXPIRE_AFTER_TIME_IN_MINUTES, 10) || 60;
+    static WARN_AFTER_TIME_IN_MINUTES =
+        parseInt(<string>process.env.WARN_AFTER_TIME_IN_MINUTES, 10) || 50;
 
-    name: string
-    players: number
-    draft: boolean
-    description: string
-    list: { [id: string]: IAddedUser }
+    name: string;
+    players: number;
+    draft: boolean;
+    description: string;
+    list: { [id: string]: IAddedUser };
 
     constructor(name: string, players: number, draft: boolean, description: string) {
         this.name = name;
@@ -54,7 +55,7 @@ export class Playlist implements IPlaylist {
                 id: user.id,
                 displayName: user.username,
                 addedAt: new Date(),
-                warned: false
+                warned: false,
             };
             return true;
         }
@@ -91,8 +92,13 @@ export class Playlist implements IPlaylist {
         let playerIDsToDelete: string[] = [];
         for (let ID in this.list) {
             let player = this.list[ID];
-            if (Date.now() - new Date(player.addedAt).getTime() > Playlist.EXPIRE_AFTER_TIME_IN_MINUES * 60 * 1000) {
-                channel.send(`Removing <@${ID}> from ${this.name} due to auto removal after ${Playlist.EXPIRE_AFTER_TIME_IN_MINUES} minutes.`);
+            if (
+                Date.now() - new Date(player.addedAt).getTime() >
+                Playlist.EXPIRE_AFTER_TIME_IN_MINUTES * 60 * 1000
+            ) {
+                channel.send(
+                    `Removing <@${ID}> from ${this.name} due to auto removal after ${Playlist.EXPIRE_AFTER_TIME_IN_MINUTES} minutes.`
+                );
                 playerIDsToDelete.push(ID);
             }
         }
@@ -104,8 +110,14 @@ export class Playlist implements IPlaylist {
     warnPlayersNearExpiry(channel: any): void {
         for (let ID in this.list) {
             let player = this.list[ID];
-            if (Date.now() - new Date(player.addedAt).getTime() > Playlist.WARN_AFTER_TIME_IN_MINUES * 60 * 1000 && player.warned === false) {
-                channel.send(`<@${ID}> will be auto removed from ${this.name} soon. Please add again to reset your timer.`);
+            if (
+                Date.now() - new Date(player.addedAt).getTime() >
+                    Playlist.WARN_AFTER_TIME_IN_MINUTES * 60 * 1000 &&
+                player.warned === false
+            ) {
+                channel.send(
+                    `<@${ID}> will be auto removed from ${this.name} soon. Please add again to reset your timer.`
+                );
                 player.warned = true;
             }
         }
@@ -143,15 +155,15 @@ export class Playlist implements IPlaylist {
         this.list = {};
     }
 
-    printList() : string {
+    printList(): string {
         let result = `${this.name} (${this.getLength()} / ${this.players}): `;
         if (this.isEmpty()) {
-            result += `No players added.`
+            result += `No players added.`;
         }
         let first = true;
         for (let ID in this.list) {
             if (!first) {
-                result += ', ';
+                result += ", ";
             }
             result += `${this.list[ID].displayName}`;
             first = false;
@@ -160,18 +172,18 @@ export class Playlist implements IPlaylist {
         return result;
     }
 
-    printDetailedList() : string {
+    printDetailedList(): string {
         let result = `${this.name} (${this.getLength()} / ${this.players}): `;
         if (this.isEmpty()) {
-            result += `No players added.`
+            result += `No players added.`;
         }
         let first = true;
         for (let ID in this.list) {
             if (!first) {
-                result += ', ';
+                result += ", ";
             }
             result += `**${this.list[ID].displayName}**`;
-            result += ` (<t:${(this.list[ID].addedAt.getTime()/1000).toFixed(0)}:R>)`;
+            result += ` (<t:${(this.list[ID].addedAt.getTime() / 1000).toFixed(0)}:R>)`;
             first = false;
         }
         result += `\n`;

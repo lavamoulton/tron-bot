@@ -1,15 +1,18 @@
 import { Message } from "discord.js";
 import { CommandList } from "../commands/_CommandList";
 import { config } from "../config/config";
-import { IPlaylists } from "../playlists";
 
-export const onMessage = async (message: Message, playlists: IPlaylists, captains: string[]) => {
+export const onMessage = async (
+    message: Message,
+    playlists: IPlaylists,
+    captains: string[]
+) => {
     const content = message.content;
     console.log(`New message: ${content}`);
 
     if (message.channel.type === "GUILD_TEXT") {
         let channel = message.channel;
-        if (channel.name !== 'pickup') {
+        if (channel.name !== "pickup") {
             return;
         }
     } else {

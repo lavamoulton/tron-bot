@@ -3,9 +3,7 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 import { pl } from "../playlists/playlists";
 
 export const who: ICommand = {
-    data: new SlashCommandBuilder()
-        .setName("who")
-        .setDescription("Display who is added"),
+    data: new SlashCommandBuilder().setName("who").setDescription("Display who is added"),
     run: async (interaction, playlists) => {
         const { user } = interaction;
 
@@ -15,7 +13,7 @@ export const who: ICommand = {
     runMessage: async (message, playlists) => {
         let result = pl.getAddedPlayers(playlists);
         await message.channel.send(`${result}`);
-    }
+    },
 };
 
 export const whowhen: ICommand = {
@@ -31,5 +29,5 @@ export const whowhen: ICommand = {
     runMessage: async (message, playlists) => {
         let result = pl.getAddedPlayersAndWhen(playlists);
         await message.channel.send(`${result}`);
-    }
+    },
 };

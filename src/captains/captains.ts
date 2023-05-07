@@ -5,7 +5,9 @@ export function loadCaptains(): string[] {
     const captains = [];
 
     try {
-        const cFile: any = yaml.load(fs.readFileSync('./src/captains/captains.yml', 'utf8'));
+        const cFile: any = yaml.load(
+            fs.readFileSync("./src/captains/captains.yml", "utf8")
+        );
         const cFileLists = cFile.captains;
         for (let id in cFileLists) {
             captains.push(cFileLists[id]);

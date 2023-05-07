@@ -7,7 +7,7 @@ export const add: ICommand = {
         .setName("add")
         .setDescription("Add to specified playlist(s)")
         .addStringOption((option) =>
-            option 
+            option
                 .setName("playlists")
                 .setDescription("Playlists to add to")
                 .setChoices(pl.loadChoices())
@@ -26,8 +26,8 @@ export const add: ICommand = {
         let result = ``;
 
         if (options.length === 0) {
-            result += pl.addToPlaylist('fort', author, playlists);
-            result += pl.addToPlaylist('tst', author, playlists);
+            result += pl.addToPlaylist("fort", author, playlists);
+            result += pl.addToPlaylist("tst", author, playlists);
             await message.channel.send(`${result}`);
         } else {
             for (let i in options) {
@@ -38,5 +38,5 @@ export const add: ICommand = {
             }
             await message.channel.send(`${result}`);
         }
-    }
+    },
 };

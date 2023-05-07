@@ -9,7 +9,7 @@ export const start: ICommand = {
         .setDescription("Start specified playlist(s)")
         .setDefaultPermission(false)
         .addStringOption((option) =>
-            option 
+            option
                 .setName("playlists")
                 .setDescription("Playlist(s) to start")
                 .setChoices(pl.loadChoices())
@@ -28,8 +28,8 @@ export const start: ICommand = {
         let result = ``;
 
         if (options.length === 0) {
-            await pl.fillList('fort', message.guild!, playlists, captains);
-            result += pl.startPlaylist('fort', playlists);
+            await pl.fillList("fort", message.guild!, playlists, captains);
+            result += pl.startPlaylist("fort", playlists);
             await message.channel.send(`${result}`);
         } else {
             for (let i in options) {
@@ -39,5 +39,5 @@ export const start: ICommand = {
             }
             await message.channel.send(`${result}`);
         }
-    }
+    },
 };

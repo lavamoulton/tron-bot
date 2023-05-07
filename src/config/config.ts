@@ -1,4 +1,4 @@
-import 'dotenv/config'
+import "dotenv/config";
 
 let config = {
     TOKEN: process.env.TOKEN,
@@ -6,8 +6,8 @@ let config = {
     GUILD_ID: process.env.GUILD_ID,
     ENVIRONMENT: process.env.environment,
     INTENT_OPTIONS: ["GUILDS"],
-    PREFIX: '!',
-    ALLOWED_CHANNELS: ["bot-experiments"],
-}
+    PREFIX: "!",
+    ALLOWED_CHANNELS: ["bot-experiments", "pickup"],
+};
 
 export { config };

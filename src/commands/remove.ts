@@ -7,7 +7,7 @@ export const remove: ICommand = {
         .setName("remove")
         .setDescription("Remove from specified playlist(s)")
         .addStringOption((option) =>
-            option 
+            option
                 .setName("playlists")
                 .setDescription("Playlists to remove from")
                 .setChoices(pl.loadChoices())
@@ -18,7 +18,7 @@ export const remove: ICommand = {
         const text = interaction.options.getString("playlists", true);
 
         let result = pl.removeFromPlaylist(text, user, playlists);
-        await interaction.reply(`${result}`);      
+        await interaction.reply(`${result}`);
     },
     runMessage: async (message, playlists) => {
         const { author } = message;
@@ -40,5 +40,5 @@ export const remove: ICommand = {
             }
             await message.channel.send(`${result}`);
         }
-    }
+    },
 };
