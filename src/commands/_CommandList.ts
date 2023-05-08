@@ -1,5 +1,5 @@
 import { ICommand } from "../interfaces/Command";
-import { add } from "./add";
+import { add } from "./addold";
 import { remove } from "./remove";
 import { start } from "./start";
 import { who, whowhen } from "./who";

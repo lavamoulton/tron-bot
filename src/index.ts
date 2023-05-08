@@ -1,4 +1,5 @@
-import { Client, Intents } from "discord.js";
+import { SapphireClient } from "@sapphire/framework";
+import { GatewayIntentBits } from "discord.js";
 import { config } from "./config/config";
 import { onInteraction } from "./events/onInteraction";
 import { onReady } from "./events/onReady";
@@ -6,6 +7,26 @@ import { onMessage } from "./events/onMessage";
 import { pl } from "./playlists/playlists";
 import { loadCaptains } from "./captains/captains";
 
+(async () => {
+    const channel = config.OUTPUT_CHANNEL;
+
+    const client = new SapphireClient({
+        intents: [
+            GatewayIntentBits.MessageContent,
+            GatewayIntentBits.Guilds,
+            GatewayIntentBits.GuildMessages,
+        ],
+        loadMessageCommandListeners: true,
+    });
+
+    const playlists: IPlaylists = pl.loadPlaylists();
+
+    client.
+
+    await client.login(config.TOKEN);
+})();
+
+/*
 (async () => {
     let channel = config.OUTPUT_CHANNEL;
 
@@ -39,4 +60,4 @@ import { loadCaptains } from "./captains/captains";
     });
 
     await client.login(config.TOKEN);
-})();
+})();*/
