@@ -7,7 +7,7 @@ import { pl } from "./playlists/playlists";
 import { loadCaptains } from "./captains/captains";
 
 (async () => {
-    let channel: any;
+    let channel = config.OUTPUT_CHANNEL;
 
     const client = new Client({
         intents: [
@@ -35,10 +35,6 @@ import { loadCaptains } from "./captains/captains";
     );
 
     client.on("messageCreate", async (message) => {
-        if (channel === undefined) {
-            channel = message.channel;
-        }
-
         await onMessage(message, playlists, captains);
     });
 
