@@ -8,7 +8,7 @@ let config = {
     INTENT_OPTIONS: ["GUILDS"],
     PREFIX: "!",
     ALLOWED_CHANNELS: ["bot-experiments", "pickup"],
-    OUTPUT_CHANNEL: ["pickup"],
+    OUTPUT_CHANNEL_ID: process.env.OUTPUT_CHANNEL_ID,
 };
 
 export { config };

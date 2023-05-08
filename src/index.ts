@@ -1,4 +1,4 @@
-import { Client, Intents } from "discord.js";
+import { Client, DMChannel, Intents } from "discord.js";
 import { config } from "./config/config";
 import { onInteraction } from "./events/onInteraction";
 import { onReady } from "./events/onReady";
@@ -7,8 +7,6 @@ import { pl } from "./playlists/playlists";
 import { loadCaptains } from "./captains/captains";
 
 (async () => {
-    let channel = config.OUTPUT_CHANNEL;
-
     const client = new Client({
         intents: [
             Intents.FLAGS.GUILDS,
@@ -16,6 +14,9 @@ import { loadCaptains } from "./captains/captains";
             Intents.FLAGS.GUILD_MEMBERS,
         ],
     });
+
+    let channel_id = config.OUTPUT_CHANNEL_ID;
+    let channel = client.channels.cache.get(`${channel_id}`);
 
     let playlists: IPlaylists = pl.loadPlaylists();
     let captains = loadCaptains();
@@ -35,6 +36,9 @@ import { loadCaptains } from "./captains/captains";
     );
 
     client.on("messageCreate", async (message) => {
+        if (!channel) {
+            channel = client.channels.cache.get(`${channel_id}`);
+        }
         await onMessage(message, playlists, captains);
     });
 

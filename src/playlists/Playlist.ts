@@ -84,6 +84,10 @@ export class Playlist implements IPlaylist {
     }
 
     warnAndExpirePlayers(channel: any): void {
+        if (!channel) {
+            console.log(`No channel currently set, ignoring expiration check`);
+            return;
+        }
         this.expirePlayers(channel);
         this.warnPlayersNearExpiry(channel);
     }
