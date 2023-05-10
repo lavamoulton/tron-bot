@@ -1,33 +1,28 @@
-import { ICommand } from "../interfaces/Command";
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { pl } from "../playlists/playlists";
+import { Command, container } from "@sapphire/framework";
+import type { Message } from "discord.js";
 
-export const who: ICommand = {
-    data: new SlashCommandBuilder().setName("who").setDescription("Display who is added"),
-    run: async (interaction, playlists) => {
-        const { user } = interaction;
+// Use this to disable commands like start in production environment
+const COMMAND_ENABLED = true;
+const COMMAND_NAME = "who";
+const COMMAND_DESCRIPTION = "Check who is currently added to pickup";
 
-        let result = pl.getAddedPlayers(playlists);
-        await interaction.reply(`${result}`);
-    },
-    runMessage: async (message, playlists) => {
-        let result = pl.getAddedPlayers(playlists);
-        await message.channel.send(`${result}`);
-    },
-};
+export class WhoCommand extends Command {
+    public constructor(context: Command.Context, options: Command.Options) {
+        super(context, {
+            ...options,
+            enabled: COMMAND_ENABLED,
+            name: COMMAND_NAME,
+            description: COMMAND_DESCRIPTION,
+            preconditions: ["Channel"],
+        });
+    }
 
-export const whowhen: ICommand = {
-    data: new SlashCommandBuilder()
-        .setName("whowhen")
-        .setDescription("Display who is added and when"),
-    run: async (interaction, playlists) => {
-        const { user } = interaction;
-
-        let result = pl.getAddedPlayersAndWhen(playlists);
-        await interaction.reply(`${result}`);
-    },
-    runMessage: async (message, playlists) => {
-        let result = pl.getAddedPlayersAndWhen(playlists);
-        await message.channel.send(`${result}`);
-    },
-};
+    public async messageRun(message: Message) {
+        let result = ``;
+        const { author } = message;
+        const content = message.content;
+        container.logger.debug(`New message: ${content}`);
+        result = container.manager.getAddedPlayers(false);
+        await message.channel.send(result);
+    }
+}

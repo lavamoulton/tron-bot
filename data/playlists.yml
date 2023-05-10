@@ -24,3 +24,13 @@ playlists:
         players: 8
         draft: false
         description: "Sumobar 8 players"
+    test8:
+        name: "Test8"
+        players: 8
+        draft: true
+        description: "Use to test new game modes with 8 players"
+    test12:
+        name: "Test12"
+        players: 12
+        draft: true
+        description: "Use to test new game modes with 12 players"

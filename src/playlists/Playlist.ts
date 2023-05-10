@@ -13,7 +13,8 @@ interface IPlaylist {
     isEmpty(): boolean;
     printList(): string;
     printDetailedList(): string;
-    warnAndExpirePlayers(channel: any): void;
+    expirePlayers(): string;
+    warnPlayers(): string;
 }
 
 interface IAddedUser {
@@ -83,16 +84,7 @@ export class Playlist implements IPlaylist {
         this.list[user.id].warned = false;
     }
 
-    warnAndExpirePlayers(channel: any): void {
-        if (!channel) {
-            console.log(`No channel currently set, ignoring expiration check`);
-            return;
-        }
-        this.expirePlayers(channel);
-        this.warnPlayersNearExpiry(channel);
-    }
-
-    expirePlayers(channel: any): void {
+    expirePlayers(): string {
         let playerIDsToDelete: string[] = [];
         for (let ID in this.list) {
             let player = this.list[ID];
@@ -100,18 +92,31 @@ export class Playlist implements IPlaylist {
                 Date.now() - new Date(player.addedAt).getTime() >
                 Playlist.EXPIRE_AFTER_TIME_IN_MINUTES * 60 * 1000
             ) {
-                channel.send(
-                    `Removing <@${ID}> from ${this.name} due to auto removal after ${Playlist.EXPIRE_AFTER_TIME_IN_MINUTES} minutes.`
-                );
                 playerIDsToDelete.push(ID);
             }
+        }
+        if (playerIDsToDelete.length < 1) {
+            return ``;
         }
         for (let stringId of playerIDsToDelete) {
             delete this.list[stringId];
         }
+        let result = `Removing `;
+        let first = true;
+        playerIDsToDelete.forEach((id) => {
+            if (first) {
+                result += `<@${id}>`;
+                first = false;
+            } else {
+                result += `, <@${id}>`;
+            }
+        });
+        result += ` from ${this.name} due to auto removal after ${Playlist.EXPIRE_AFTER_TIME_IN_MINUTES} minutes.\n`;
+        return result;
     }
 
-    warnPlayersNearExpiry(channel: any): void {
+    warnPlayers(): string {
+        let playerIDsToWarn: string[] = [];
         for (let ID in this.list) {
             let player = this.list[ID];
             if (
@@ -119,12 +124,25 @@ export class Playlist implements IPlaylist {
                     Playlist.WARN_AFTER_TIME_IN_MINUTES * 60 * 1000 &&
                 player.warned === false
             ) {
-                channel.send(
-                    `<@${ID}> will be auto removed from ${this.name} soon. Please add again to reset your timer.`
-                );
+                playerIDsToWarn.push(ID);
                 player.warned = true;
             }
         }
+        if (playerIDsToWarn.length < 1) {
+            return ``;
+        }
+        let result = ``;
+        let first = true;
+        playerIDsToWarn.forEach((id) => {
+            if (first) {
+                result += `<@${id}>`;
+                first = false;
+            } else {
+                result += `, <@${id}>`;
+            }
+        });
+        result += ` will be auto removed from ${this.name} soon. Please add again to reset your timer.\n`;
+        return result;
     }
 
     isDraft(): boolean {
