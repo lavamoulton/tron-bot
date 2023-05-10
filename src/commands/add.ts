@@ -1,7 +1,5 @@
-import { Args, ChatInputCommand, Command } from "@sapphire/framework";
+import { Command, container } from "@sapphire/framework";
 import type { Message } from "discord.js";
-import { isMessageInstance } from "@sapphire/discord.js-utilities";
-import { pl } from "../playlists/playlists";
 
 // Use this to disable commands like start in production environment
 const COMMAND_ENABLED = true;
@@ -15,12 +13,24 @@ export class AddCommand extends Command {
             enabled: COMMAND_ENABLED,
             name: COMMAND_NAME,
             description: COMMAND_DESCRIPTION,
+            preconditions: ["Channel"],
         });
     }
 
+    /*
     public override registerApplicationCommands(registry: ChatInputCommand.Registry) {
         registry.registerChatInputCommand((builder) =>
-            builder.setName(COMMAND_NAME).setDescription(COMMAND_DESCRIPTION)
+            builder
+                .setName(COMMAND_NAME)
+                .setDescription(COMMAND_DESCRIPTION)
+                .addStringOption((option) =>
+                    option
+                        .setName("playlists")
+                        .setDescription("Playlist to add to")
+                        .setRequired(false)
+                        .setAutocomplete(true)
+                        .setChoices(pl.loadChoices())
+                )
         );
     }
 
@@ -30,32 +40,21 @@ export class AddCommand extends Command {
 
         let result = `Adding to playlist(s): ${text}`;
         await interaction.reply(`${result}`);
-    }
+    }*/
 
-    public async messageRun(message: Message, args: Args) {
-        const { author } = message;
-        const options = message.content.toLowerCase().split(" ").slice(1);
-
+    public async messageRun(message: Message) {
         let result = ``;
-
-        if (options.length === 0) {
-            result += pl.addToPlaylist("fort", author, playlists);
-            result += pl.addToPlaylist("tst", author, playlists);
-            await message.channel.send(`${result}`);
+        const { author } = message;
+        const content = message.content;
+        container.logger.debug(`New message: ${content}`);
+        const splitContent = content.split(" ");
+        const command = splitContent.shift();
+        container.logger.debug(`Split args: ${splitContent}`);
+        if (splitContent.length > 0) {
+            result = container.manager.addToPlaylists(splitContent, author);
         } else {
-            for (let i in options) {
-                let option = options[i];
-                if (option in playlists) {
-                    result += pl.addToPlaylist(option, author, playlists);
-                }
-            }
-            await message.channel.send(`${result}`);
+            result = container.manager.addToPlaylists(["fort", "tst"], author);
         }
-
-        const content = `Pong test. Bot latency ${Math.round(
-            this.container.client.ws.ping
-        )}ms. API latency ${msg.createdTimestamp - message.createdTimestamp}ms.`;
-
-        return msg.edit(content);
+        await message.channel.send(result);
     }
 }

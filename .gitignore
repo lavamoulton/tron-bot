@@ -17,4 +17,5 @@ yarn.lock
 .env.production
 
 captains.yml
+*.txt
 

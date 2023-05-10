@@ -2,13 +2,20 @@ import { ChatInputCommand, Command } from "@sapphire/framework";
 import type { Message } from "discord.js";
 import { isMessageInstance } from "@sapphire/discord.js-utilities";
 
+// Use this to disable commands like start in production environment
+const COMMAND_ENABLED = true;
+const COMMAND_NAME = "ping";
+const COMMAND_DESCRIPTION = "Check latency of bot";
+
 export class PingCommand extends Command {
     public constructor(context: Command.Context, options: Command.Options) {
         super(context, {
             ...options,
-            name: "ping",
+            enabled: COMMAND_ENABLED,
+            name: COMMAND_NAME,
             aliases: ["pong"],
-            description: "ping pong",
+            description: COMMAND_DESCRIPTION,
+            preconditions: ["Channel"],
         });
     }
 

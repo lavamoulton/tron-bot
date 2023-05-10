@@ -3,10 +3,11 @@ import type { Message } from "discord.js";
 
 // Use this to disable commands like start in production environment
 const COMMAND_ENABLED = true;
-const COMMAND_NAME = "remove";
-const COMMAND_DESCRIPTION = "Remove from specified playlist(s)";
+const COMMAND_NAME = "whowhen";
+const COMMAND_DESCRIPTION =
+    "Check who is currently added to pickup and how long they have been added";
 
-export class RemoveCommand extends Command {
+export class WhoCommand extends Command {
     public constructor(context: Command.Context, options: Command.Options) {
         super(context, {
             ...options,
@@ -22,14 +23,7 @@ export class RemoveCommand extends Command {
         const { author } = message;
         const content = message.content;
         container.logger.debug(`New message: ${content}`);
-        const splitContent = content.split(" ");
-        const command = splitContent.shift();
-        container.logger.debug(`Split args: ${splitContent}`);
-        if (splitContent.length > 0) {
-            result = container.manager.removeFromPlaylists(splitContent, author, false);
-        } else {
-            result = container.manager.removeAllPlaylists(author);
-        }
+        result = container.manager.getAddedPlayers(true);
         await message.channel.send(result);
     }
 }

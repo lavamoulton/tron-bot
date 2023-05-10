@@ -1,12 +1,13 @@
 import * as yaml from "js-yaml";
 import * as fs from "fs";
 import { Playlist } from "./Playlist";
-import { Guild, User } from "discord.js";
+import { APIApplicationCommandOptionChoice, Guild, User } from "discord.js";
 
 function loadPlaylists(): IPlaylists {
     const playlists: IPlaylists = {};
 
     try {
+        // TODO: remove hardcoding
         const pFile: any = yaml.load(
             fs.readFileSync("./src/playlists/playlists.yml", "utf8")
         );
@@ -26,14 +27,17 @@ function loadPlaylists(): IPlaylists {
     }
 }
 
-function loadChoices(): [name: string, value: string][] {
+function loadChoices(): APIApplicationCommandOptionChoice<string>[] {
     let result = [];
     let playlists = loadPlaylists();
     for (let i in playlists) {
         let playlist = playlists[i];
-        result.push([playlist.name, i] as [name: string, value: string]);
+        result.push({
+            name: playlist.name,
+            value: i,
+        } as APIApplicationCommandOptionChoice<string>);
     }
-    return result;
+    return result as APIApplicationCommandOptionChoice<string>[];
 }
 
 function addToPlaylist(name: string, user: User, playlists: IPlaylists): string {
