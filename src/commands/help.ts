@@ -36,7 +36,7 @@ export class AddCommand extends Command {
         } else {
             result = `----- **Help** -----\n`;
             for (const command of container.stores.get("commands")) {
-                if (command[0] === "help") {
+                if (command[0] === "help" || command[0] === "ping") {
                     continue;
                 }
                 result += `**!${command[0]}**: ${command[1].description}\n`;
