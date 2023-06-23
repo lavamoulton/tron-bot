@@ -18,8 +18,8 @@ interface IPlaylist {
     clearList(): void;
     printList(): string;
     printDetailedList(): string;
-    expirePlayers(): string;
-    warnPlayers(): string;
+    expirePlayers(): string[];
+    warnPlayers(): string[];
 }
 
 interface IAddedUser {

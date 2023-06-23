@@ -97,8 +97,7 @@ export class Manager {
         return result;
     }
 
-    public warnAndExpirePlayers(): void {
-        let result = ``;
+    public async warnAndExpirePlayers(): Promise<void> {
         if (!this.channel) {
             const channel = container.client.channels.cache.get(config.OUTPUT_CHANNEL!);
             if (channel) {
@@ -110,15 +109,40 @@ export class Manager {
         } else {
             for (let i in this.playlists) {
                 const playlist = this.playlists[i];
-                result += playlist.expirePlayers();
+                const expiredPlayerIDs = playlist.expirePlayers();
+                if (expiredPlayerIDs.length > 0) {
+                    for (const playerID in expiredPlayerIDs) {
+                        const user = container.client.users.cache.get(playerID);
+                        if (user) {
+                            if (!user.dmChannel) {
+                                await user.createDM();
+                            }
+                            user.dmChannel?.send(`Auto removing you from ${playlist}`);
+                        }
+                    }
+                }
             }
             for (let i in this.playlists) {
                 const playlist = this.playlists[i];
-                result += playlist.warnPlayers();
+                const warnedPlayerIDs = playlist.warnPlayers();
+                if (warnedPlayerIDs.length > 0) {
+                    for (const playerID in warnedPlayerIDs) {
+                        const user = container.client.users.cache.get(playerID);
+                        if (user) {
+                            if (!user.dmChannel) {
+                                await user.createDM();
+                            }
+                            user.dmChannel?.send(
+                                `Auto removing you from ${playlist} in 10 minutes, please re-add to reset timer`
+                            );
+                        }
+                    }
+                }
             }
+            /*
             if (result.length > 0) {
                 this.channel.send(result);
-            }
+            }*/
         }
     }
 

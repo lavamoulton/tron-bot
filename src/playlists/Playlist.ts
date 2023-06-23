@@ -13,8 +13,8 @@ interface IPlaylist {
     isEmpty(): boolean;
     printList(): string;
     printDetailedList(): string;
-    expirePlayers(): string;
-    warnPlayers(): string;
+    expirePlayers(): string[];
+    warnPlayers(): string[];
 }
 
 interface IAddedUser {
@@ -84,7 +84,7 @@ export class Playlist implements IPlaylist {
         this.list[user.id].warned = false;
     }
 
-    expirePlayers(): string {
+    expirePlayers(): string[] {
         let playerIDsToDelete: string[] = [];
         for (let ID in this.list) {
             let player = this.list[ID];
@@ -95,27 +95,10 @@ export class Playlist implements IPlaylist {
                 playerIDsToDelete.push(ID);
             }
         }
-        if (playerIDsToDelete.length < 1) {
-            return ``;
-        }
-        for (let stringId of playerIDsToDelete) {
-            delete this.list[stringId];
-        }
-        let result = `Removing `;
-        let first = true;
-        playerIDsToDelete.forEach((id) => {
-            if (first) {
-                result += `<@${id}>`;
-                first = false;
-            } else {
-                result += `, <@${id}>`;
-            }
-        });
-        result += ` from ${this.name} due to auto removal after ${Playlist.EXPIRE_AFTER_TIME_IN_MINUTES} minutes.\n`;
-        return result;
+        return playerIDsToDelete;
     }
 
-    warnPlayers(): string {
+    warnPlayers(): string[] {
         let playerIDsToWarn: string[] = [];
         for (let ID in this.list) {
             let player = this.list[ID];
@@ -128,21 +111,7 @@ export class Playlist implements IPlaylist {
                 player.warned = true;
             }
         }
-        if (playerIDsToWarn.length < 1) {
-            return ``;
-        }
-        let result = ``;
-        let first = true;
-        playerIDsToWarn.forEach((id) => {
-            if (first) {
-                result += `<@${id}>`;
-                first = false;
-            } else {
-                result += `, <@${id}>`;
-            }
-        });
-        result += ` will be auto removed from ${this.name} soon. Please add again to reset your timer.\n`;
-        return result;
+        return playerIDsToWarn;
     }
 
     isDraft(): boolean {
