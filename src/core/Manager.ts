@@ -107,10 +107,6 @@ export class Manager {
                 container.logger.error(`Could not find output channel for autoremoval`);
             }
         } else {
-            /*
-            if (result.length > 0) {
-                this.channel.send(result);
-            }*/
             let guild;
             if (config.GUILD_ID) {
                 const temp = container.client.guilds.cache.get(config.GUILD_ID);
@@ -122,6 +118,7 @@ export class Manager {
                 container.logger.error(`Did not find guild`);
                 return;
             }
+            let expiredPlayers: { [id: string]: string[] } = {};
             for (let i in this.playlists) {
                 const playlist = this.playlists[i];
                 const expiredPlayerIDs = playlist.expirePlayers();
@@ -132,7 +129,12 @@ export class Manager {
                     for (const playerID of expiredPlayerIDs) {
                         const user = guild.members.cache.get(playerID);
                         if (user) {
-                            if (!user.dmChannel) {
+                            if (!expiredPlayers[user.id]) {
+                                expiredPlayers[user.id] = [playlist.name];
+                            } else {
+                                expiredPlayers[user.id].push(playlist.name);
+                            }
+                            /*if (!user.dmChannel) {
                                 container.logger.debug(
                                     `Attempting to create DM channel with ${user.displayName}`
                                 );
@@ -140,13 +142,41 @@ export class Manager {
                             }
                             user.dmChannel?.send(
                                 `Auto removing you from ${playlist.name}, please re-add in <#${this.channel.id}>`
-                            );
+                            );*/
                         } else {
                             container.logger.error(`Did not find user ${playerID}`);
                         }
                     }
                 }
             }
+            for (const id in expiredPlayers) {
+                const playlists = expiredPlayers[id];
+                let result = `Auto removing you from `;
+                let first = true;
+                playlists.forEach((playlist) => {
+                    if (first) {
+                        result += `${playlist}`;
+                        first = false;
+                    } else {
+                        result += `, ${playlist}`;
+                    }
+                });
+                result += `. Please re-add in <#${this.channel.id}>`;
+                const member = guild.members.cache.get(id);
+                if (member) {
+                    if (!member.dmChannel) {
+                        container.logger.debug(
+                            `Attempting to create DM channel with ${member.displayName}`
+                        );
+                        await member.createDM(true);
+                    }
+                    member.dmChannel?.send(result);
+                } else {
+                    container.logger.error(`Did not find guild member ${id}`);
+                }
+            }
+
+            let warnedPlayers: { [id: string]: string[] } = {};
             for (let i in this.playlists) {
                 const playlist = this.playlists[i];
                 const warnedPlayerIDs = playlist.warnPlayers();
@@ -157,6 +187,12 @@ export class Manager {
                     for (const playerID of warnedPlayerIDs) {
                         const user = guild.members.cache.get(playerID);
                         if (user) {
+                            if (!warnedPlayers[user.id]) {
+                                warnedPlayers[user.id] = [playlist.name];
+                            } else {
+                                warnedPlayers[user.id].push(playlist.name);
+                            }
+                            /*
                             if (!user.dmChannel) {
                                 container.logger.debug(
                                     `Attempting to create DM channel with ${user.displayName}`
@@ -170,11 +206,41 @@ export class Manager {
                                 } minutes, please re-add in <#${
                                     this.channel.id
                                 }> to reset timer`
-                            );
+                            );*/
                         } else {
                             container.logger.error(`Did not find user ${playerID}`);
                         }
                     }
+                }
+            }
+            for (const id in warnedPlayers) {
+                const playlists = warnedPlayers[id];
+                let result = `Auto removing you from `;
+                let first = true;
+                playlists.forEach((playlist) => {
+                    if (first) {
+                        result += `${playlist}`;
+                        first = false;
+                    } else {
+                        result += `, ${playlist}`;
+                    }
+                });
+                result += ` in ${
+                    config.EXPIRE_AFTER_TIME_IN_MINUTES -
+                    config.WARN_AFTER_TIME_IN_MINUTES
+                } minutes. `;
+                result += `Please re-add in <#${this.channel.id}> to reset timer`;
+                const member = guild.members.cache.get(id);
+                if (member) {
+                    if (!member.dmChannel) {
+                        container.logger.debug(
+                            `Attempting to create DM channel with ${member.displayName}`
+                        );
+                        await member.createDM(true);
+                    }
+                    member.dmChannel?.send(result);
+                } else {
+                    container.logger.error(`Did not find guild member ${id}`);
                 }
             }
         }
@@ -338,7 +404,7 @@ export class Manager {
         for (const name in this.playlists) {
             const playlist = this.playlists[name];
             if (!playlist.isEmpty()) {
-                result += `| ${playlist.name}: (${playlist.getLength()} / ${
+                result += `|${playlist.name}: (${playlist.getLength()} / ${
                     playlist.players
                 })`;
             }
@@ -347,13 +413,13 @@ export class Manager {
             let finalResult =
                 `!add for pickup games here.` +
                 result +
-                `For talk, please use the <#805096704012713985> channel.`;
+                `|For talk, please use the <#805096704012713985> channel.`;
             await this.channel.setTopic(finalResult);
             return true;
         } else {
             let finalResult =
-                `!add for pickup games here. | ` +
-                `No players added. ` +
+                `!add for pickup games here.|` +
+                `No players added.|` +
                 `For talk, please use the <#805096704012713985> channel.`;
             await this.channel.setTopic(finalResult);
             return true;
