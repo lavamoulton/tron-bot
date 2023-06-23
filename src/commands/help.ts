@@ -34,14 +34,14 @@ export class AddCommand extends Command {
                 }
             }
         } else {
-            result = `----- Help -----\n`;
+            result = `----- **Help** -----\n`;
             for (const command of container.stores.get("commands")) {
                 if (command[0] === "help") {
                     continue;
                 }
                 result += `**!${command[0]}**: ${command[1].description}\n`;
             }
-            result += `For more information on any command type ***!help <command>***`;
+            result += `\nFor more information on any command type ***!help <command>***.`;
         }
         if (!author.dmChannel) {
             await author.createDM();
