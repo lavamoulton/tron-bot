@@ -4,7 +4,7 @@ After cloning the repository, create a `.env` file based on the provided example
 
 ## Starting the bot
 
-From the root directory, run `npm build` to build to `dist/` by default. Run `npm start` to start the bot.
+From the root directory, run `npm run build` to build to `dist/` by default. Run `npm run start` to start the bot.
 
 ## Auto removal
 
