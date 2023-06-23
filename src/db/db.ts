@@ -2,6 +2,13 @@ import { Database } from "sqlite3";
 import fs from "fs";
 import { container } from "@sapphire/framework";
 
+interface PlayerData {
+    id: string;
+    username: string;
+    displayName: string;
+    count: number;
+}
+
 export class DB {
     database: Database;
 
@@ -32,14 +39,37 @@ export class DB {
         this.database.exec(
             `UPDATE players SET username='${username}', displayName='${displayName}', count=count+1 WHERE id='${id}'`
         );
-        const result = this.database.all(`SELECT * from players`, (_, res) => {
-            container.logger.debug(JSON.stringify(res));
+        this.database.all(`SELECT * FROM 'players'`, (_, res) => {
+            container.logger.debug(`SET PLAYER RECORD: ${JSON.stringify(res)}`);
         });
     }
 
-    /*
-                ON CONFLICT ('${id}') DO
-                UPDATE SET username='${username}', displayName='${displayName}', count=count+1`);*/
+    public getPlayerRecord(id: string): PlayerData | undefined {
+        container.logger.debug(`Getting player record for ${id}`);
+        this.database.all(`SELECT * FROM 'players'`, (_, res) => {
+            container.logger.debug(`GET PLAYER RECORD: ${JSON.stringify(res)}`);
+        });
+        let data: PlayerData | undefined = undefined;
+        const statement = this.database.prepare(`SELECT * FROM 'players' WHERE id=?`);
+        statement.run([id], (_: Error, res: PlayerData) => {
+            if (res) {
+                data = {
+                    id: res.id,
+                    username: res.username,
+                    displayName: res.displayName,
+                    count: res.count,
+                };
+                container.logger.debug(JSON.stringify(data));
+                return data;
+            } else {
+                container.logger.debug(`Did not find record ${JSON.stringify(res)}`);
+            }
+        });
+        if (!data) {
+            container.logger.debug(`Did not find player data, returning undefined`);
+            return undefined;
+        }
+    }
 
     public close() {
         this.database.close();

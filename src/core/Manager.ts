@@ -193,6 +193,7 @@ export class Manager {
         }
 
         if (playlist.addPlayer(user, displayName)) {
+            container.logger.debug(JSON.stringify(container.db.getPlayerRecord(user.id)));
             container.db.updatePlayerRecord(user.id, user.username, displayName);
             return playlist.printList();
         } else {
