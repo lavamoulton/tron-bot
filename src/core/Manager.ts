@@ -111,63 +111,69 @@ export class Manager {
             if (result.length > 0) {
                 this.channel.send(result);
             }*/
-        }
-        let guild;
-        if (config.GUILD_ID) {
-            const temp = container.client.guilds.cache.get(config.GUILD_ID);
-            if (temp) {
-                guild = temp;
+            let guild;
+            if (config.GUILD_ID) {
+                const temp = container.client.guilds.cache.get(config.GUILD_ID);
+                if (temp) {
+                    guild = temp;
+                }
             }
-        }
-        if (!guild) {
-            container.logger.error(`Did not find guild`);
-            return;
-        }
-        for (let i in this.playlists) {
-            const playlist = this.playlists[i];
-            const expiredPlayerIDs = playlist.expirePlayers();
-            if (expiredPlayerIDs.length > 0) {
-                container.logger.debug(
-                    `Found ${expiredPlayerIDs.length} expired players`
-                );
-                for (const playerID of expiredPlayerIDs) {
-                    const user = guild.members.cache.get(playerID);
-                    if (user) {
-                        if (!user.dmChannel) {
-                            container.logger.debug(
-                                `Attempting to create DM channel with ${user.displayName}`
+            if (!guild) {
+                container.logger.error(`Did not find guild`);
+                return;
+            }
+            for (let i in this.playlists) {
+                const playlist = this.playlists[i];
+                const expiredPlayerIDs = playlist.expirePlayers();
+                if (expiredPlayerIDs.length > 0) {
+                    container.logger.debug(
+                        `Found ${expiredPlayerIDs.length} expired players`
+                    );
+                    for (const playerID of expiredPlayerIDs) {
+                        const user = guild.members.cache.get(playerID);
+                        if (user) {
+                            if (!user.dmChannel) {
+                                container.logger.debug(
+                                    `Attempting to create DM channel with ${user.displayName}`
+                                );
+                                await user.createDM(true);
+                            }
+                            user.dmChannel?.send(
+                                `Auto removing you from ${playlist.name}, please re-add in <#${this.channel.id}>`
                             );
-                            await user.createDM(true);
+                        } else {
+                            container.logger.error(`Did not find user ${playerID}`);
                         }
-                        user.dmChannel?.send(`Auto removing you from ${playlist.name}`);
-                    } else {
-                        container.logger.error(`Did not find user ${playerID}`);
                     }
                 }
             }
-        }
-        for (let i in this.playlists) {
-            const playlist = this.playlists[i];
-            const warnedPlayerIDs = playlist.warnPlayers();
-            if (warnedPlayerIDs.length > 0) {
-                container.logger.debug(`Found ${warnedPlayerIDs.length} warned players`);
-                for (const playerID of warnedPlayerIDs) {
-                    const user = guild.members.cache.get(playerID);
-                    if (user) {
-                        if (!user.dmChannel) {
-                            container.logger.debug(
-                                `Attempting to create DM channel with ${user.displayName}`
+            for (let i in this.playlists) {
+                const playlist = this.playlists[i];
+                const warnedPlayerIDs = playlist.warnPlayers();
+                if (warnedPlayerIDs.length > 0) {
+                    container.logger.debug(
+                        `Found ${warnedPlayerIDs.length} warned players`
+                    );
+                    for (const playerID of warnedPlayerIDs) {
+                        const user = guild.members.cache.get(playerID);
+                        if (user) {
+                            if (!user.dmChannel) {
+                                container.logger.debug(
+                                    `Attempting to create DM channel with ${user.displayName}`
+                                );
+                                await user.createDM(true);
+                            }
+                            user.dmChannel?.send(
+                                `Auto removing you from ${playlist.name} in ${
+                                    config.EXPIRE_AFTER_TIME_IN_MINUTES -
+                                    config.WARN_AFTER_TIME_IN_MINUTES
+                                } minutes, please re-add in <#${
+                                    this.channel.id
+                                }> to reset timer`
                             );
-                            await user.createDM(true);
+                        } else {
+                            container.logger.error(`Did not find user ${playerID}`);
                         }
-                        user.dmChannel?.send(
-                            `Auto removing you from ${playlist.name} in ${
-                                config.EXPIRE_AFTER_TIME_IN_MINUTES -
-                                config.WARN_AFTER_TIME_IN_MINUTES
-                            } minutes, please re-add to reset timer`
-                        );
-                    } else {
-                        container.logger.error(`Did not find user ${playerID}`);
                     }
                 }
             }
