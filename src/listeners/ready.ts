@@ -13,9 +13,9 @@ export class ReadyListener extends Listener {
     public async run(client: Client) {
         const { username, id } = client.user!;
         container.logger.info(`Successfully logged in as ${username} (${id})`);
-        setInterval(() => {
+        setInterval(async () => {
             container.logger.debug(`Checking for warnings and autoremovals`);
-            container.manager.warnAndExpirePlayers();
+            await container.manager.warnAndExpirePlayers();
         }, 60000);
 
         container.logger.debug(`Development logging turned on`);

@@ -18,6 +18,12 @@ let config = {
         ENVIRONMENT === "development"
             ? process.env.OUTPUT_CHANNEL_DEV_ID
             : process.env.OUTPUT_CHANNEL_ID,
+    EXPIRE_AFTER_TIME_IN_MINUTES: process.env.EXPIRE_AFTER_TIME_IN_MINUTES
+        ? parseInt(process.env.EXPIRE_AFTER_TIME_IN_MINUTES, 10)
+        : 60,
+    WARN_AFTER_TIME_IN_MINUTES: process.env.WARN_AFTER_TIME_IN_MINUTES
+        ? parseInt(process.env.WARN_AFTER_TIME_IN_MINUTES, 10)
+        : 60,
 };
 
 const CLIENT_OPTIONS: ClientOptions = {
@@ -29,6 +35,7 @@ const CLIENT_OPTIONS: ClientOptions = {
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
+        GatewayIntentBits.DirectMessages,
     ],
     loadDefaultErrorListeners: true,
     loadMessageCommandListeners: true,

@@ -107,47 +107,86 @@ export class Manager {
                 container.logger.error(`Could not find output channel for autoremoval`);
             }
         } else {
-            for (let i in this.playlists) {
-                const playlist = this.playlists[i];
-                const expiredPlayerIDs = playlist.expirePlayers();
-                if (expiredPlayerIDs.length > 0) {
-                    for (const playerID in expiredPlayerIDs) {
-                        const user = container.client.users.cache.get(playerID);
-                        if (user) {
-                            if (!user.dmChannel) {
-                                await user.createDM();
-                            }
-                            user.dmChannel?.send(`Auto removing you from ${playlist}`);
-                        }
-                    }
-                }
-            }
-            for (let i in this.playlists) {
-                const playlist = this.playlists[i];
-                const warnedPlayerIDs = playlist.warnPlayers();
-                if (warnedPlayerIDs.length > 0) {
-                    for (const playerID in warnedPlayerIDs) {
-                        const user = container.client.users.cache.get(playerID);
-                        if (user) {
-                            if (!user.dmChannel) {
-                                await user.createDM();
-                            }
-                            user.dmChannel?.send(
-                                `Auto removing you from ${playlist} in 10 minutes, please re-add to reset timer`
-                            );
-                        }
-                    }
-                }
-            }
             /*
             if (result.length > 0) {
                 this.channel.send(result);
             }*/
         }
+        let guild;
+        if (config.GUILD_ID) {
+            const temp = container.client.guilds.cache.get(config.GUILD_ID);
+            if (temp) {
+                guild = temp;
+            }
+        }
+        if (!guild) {
+            container.logger.error(`Did not find guild`);
+            return;
+        }
+        for (let i in this.playlists) {
+            const playlist = this.playlists[i];
+            const expiredPlayerIDs = playlist.expirePlayers();
+            if (expiredPlayerIDs.length > 0) {
+                container.logger.debug(
+                    `Found ${expiredPlayerIDs.length} expired players`
+                );
+                for (const playerID of expiredPlayerIDs) {
+                    const user = guild.members.cache.get(playerID);
+                    if (user) {
+                        if (!user.dmChannel) {
+                            container.logger.debug(
+                                `Attempting to create DM channel with ${user.displayName}`
+                            );
+                            await user.createDM(true);
+                        }
+                        user.dmChannel?.send(`Auto removing you from ${playlist.name}`);
+                    } else {
+                        container.logger.error(`Did not find user ${playerID}`);
+                    }
+                }
+            }
+        }
+        for (let i in this.playlists) {
+            const playlist = this.playlists[i];
+            const warnedPlayerIDs = playlist.warnPlayers();
+            if (warnedPlayerIDs.length > 0) {
+                container.logger.debug(`Found ${warnedPlayerIDs.length} warned players`);
+                for (const playerID of warnedPlayerIDs) {
+                    const user = guild.members.cache.get(playerID);
+                    if (user) {
+                        if (!user.dmChannel) {
+                            container.logger.debug(
+                                `Attempting to create DM channel with ${user.displayName}`
+                            );
+                            await user.createDM(true);
+                        }
+                        user.dmChannel?.send(
+                            `Auto removing you from ${playlist.name} in ${
+                                config.EXPIRE_AFTER_TIME_IN_MINUTES -
+                                config.WARN_AFTER_TIME_IN_MINUTES
+                            } minutes, please re-add to reset timer`
+                        );
+                    } else {
+                        container.logger.error(`Did not find user ${playerID}`);
+                    }
+                }
+            }
+        }
     }
 
     private addToPlaylist(playlist: IPlaylist, user: User): string {
-        if (playlist.addPlayer(user)) {
+        let displayName = user.username;
+        if (config.GUILD_ID) {
+            const guild = container.client.guilds.cache.get(config.GUILD_ID);
+            if (guild) {
+                const guildMember = guild.members.cache.get(user.id);
+                if (guildMember) {
+                    displayName = guildMember?.displayName;
+                }
+            }
+        }
+
+        if (playlist.addPlayer(user, displayName)) {
             return playlist.printList();
         } else {
             return `${user}, you are already added to ${playlist.name}! Refreshing your added at time for auto removal.\n`;

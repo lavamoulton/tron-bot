@@ -1,4 +1,5 @@
 import { User } from "discord.js";
+import { config } from "../config/config";
 
 interface IPlaylist {
     name: string;
@@ -6,7 +7,7 @@ interface IPlaylist {
     draft: boolean;
     description: string;
     list: { [id: string]: IAddedUser };
-    addPlayer(user: User): boolean;
+    addPlayer(user: User, displayName: string): boolean;
     removePlayer(user: User): boolean;
     isPlayerAdded(user: User): boolean;
     isFull(): boolean;
@@ -28,10 +29,12 @@ interface IAddedUser {
  * Represents a Playlist that users can add/remove from
  */
 export class Playlist implements IPlaylist {
-    static EXPIRE_AFTER_TIME_IN_MINUTES =
-        parseInt(<string>process.env.EXPIRE_AFTER_TIME_IN_MINUTES, 10) || 60;
-    static WARN_AFTER_TIME_IN_MINUTES =
-        parseInt(<string>process.env.WARN_AFTER_TIME_IN_MINUTES, 10) || 50;
+    static EXPIRE_AFTER_TIME_IN_MINUTES = config.EXPIRE_AFTER_TIME_IN_MINUTES
+        ? config.EXPIRE_AFTER_TIME_IN_MINUTES
+        : 60;
+    static WARN_AFTER_TIME_IN_MINUTES = config.WARN_AFTER_TIME_IN_MINUTES
+        ? config.WARN_AFTER_TIME_IN_MINUTES
+        : 50;
 
     name: string;
     players: number;
@@ -47,14 +50,14 @@ export class Playlist implements IPlaylist {
         this.list = {};
     }
 
-    addPlayer(user: User): boolean {
+    addPlayer(user: User, displayName: string): boolean {
         if (this.isPlayerAdded(user)) {
             this.refreshPlayerAddedAt(user);
             return false;
         } else {
             this.list[user.id] = {
                 id: user.id,
-                displayName: user.username,
+                displayName: displayName,
                 addedAt: new Date(),
                 warned: false,
             };
@@ -93,6 +96,7 @@ export class Playlist implements IPlaylist {
                 Playlist.EXPIRE_AFTER_TIME_IN_MINUTES * 60 * 1000
             ) {
                 playerIDsToDelete.push(ID);
+                delete this.list[ID];
             }
         }
         return playerIDsToDelete;
