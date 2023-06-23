@@ -1,5 +1,6 @@
 import { Listener, container } from "@sapphire/framework";
 import type { Client } from "discord.js";
+import { DB } from "../db/db";
 
 export class ReadyListener extends Listener {
     public constructor(context: Listener.Context, options: Listener.Options) {
@@ -17,7 +18,6 @@ export class ReadyListener extends Listener {
             container.logger.debug(`Checking for warnings and autoremovals`);
             await container.manager.warnAndExpirePlayers();
         }, 60000);
-        await container.manager.updateTopic();
         setInterval(async () => {
             container.logger.debug(`Updating channel topic`);
             await container.manager.updateTopic();
@@ -35,5 +35,6 @@ export class ReadyListener extends Listener {
             .forEach((precondition) =>
                 container.logger.debug(`Precondition: ${precondition.name}`)
             );
+        container.db = new DB();
     }
 }
