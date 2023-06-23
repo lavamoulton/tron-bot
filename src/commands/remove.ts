@@ -29,7 +29,11 @@ export class RemoveCommand extends Command {
         const command = splitContent.shift();
         container.logger.debug(`Split args: ${splitContent}`);
         if (splitContent.length > 0) {
-            result = container.manager.removeFromPlaylists(splitContent, author, false);
+            result = await container.manager.removeFromPlaylists(
+                splitContent,
+                author,
+                false
+            );
         } else {
             result = container.manager.removeAllPlaylists(author);
         }

@@ -17,6 +17,11 @@ export class ReadyListener extends Listener {
             container.logger.debug(`Checking for warnings and autoremovals`);
             await container.manager.warnAndExpirePlayers();
         }, 60000);
+        await container.manager.updateTopic();
+        setInterval(async () => {
+            container.logger.debug(`Updating channel topic`);
+            await container.manager.updateTopic();
+        }, 300000);
 
         container.logger.debug(`Development logging turned on`);
         container.stores

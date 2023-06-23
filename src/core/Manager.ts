@@ -320,4 +320,35 @@ export class Manager {
         }
         playlist.clearList();
     }
+
+    public async updateTopic(): Promise<boolean> {
+        if (!this.channel) {
+            const channel = container.client.channels.cache.get(config.OUTPUT_CHANNEL!);
+            if (channel) {
+                this.channel = channel as TextChannel;
+                container.logger.info(`Setting output channel`);
+            } else {
+                container.logger.error(`Could not find output channel`);
+                return false;
+            }
+        }
+        let result = ``;
+        for (const name in this.playlists) {
+            const playlist = this.playlists[name];
+            if (!playlist.isEmpty()) {
+                result += `| ${playlist.name}: (${playlist.getLength()} / ${
+                    playlist.players
+                })`;
+            }
+        }
+        if (result.length > 0) {
+            let finalResult = `!add for pickup games here.` + result;
+            await this.channel.setTopic(finalResult);
+            return true;
+        } else {
+            let finalResult = `!add for pickup games here. | ` + `No players added.`;
+            await this.channel.setTopic(finalResult);
+            return true;
+        }
+    }
 }
