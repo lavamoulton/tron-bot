@@ -18,20 +18,34 @@ export class AddCommand extends Command {
     }
 
     public async messageRun(message: Message) {
-        let result = `----- Help -----\n`;
-        for (const command of container.stores.get("commands")) {
-            result += `${command[0]}: ${command[1].description}`;
-        }
-        result += `For more information on any command type !help <command>`;
         const { author } = message;
-        if (!author.dmChannel) {
-            await author.createDM();
-        }
         const content = message.content;
         container.logger.debug(`New message: ${content}`);
         const splitContent = content.split(" ");
         const command = splitContent.shift();
         container.logger.debug(`Split args: ${splitContent}`);
+        let result = ``;
+        if (splitContent.length > 0) {
+            for (const arg of splitContent) {
+                for (const command of container.stores.get("commands")) {
+                    if (command[0] === arg) {
+                        result += `**!${command[0]}**: ${command[1].detailedDescription}\n`;
+                    }
+                }
+            }
+        } else {
+            result = `----- Help -----\n`;
+            for (const command of container.stores.get("commands")) {
+                if (command[0] === "help") {
+                    continue;
+                }
+                result += `**!${command[0]}**: ${command[1].description}\n`;
+            }
+            result += `For more information on any command type ***!help <command>***`;
+        }
+        if (!author.dmChannel) {
+            await author.createDM();
+        }
         author.dmChannel?.send(result);
     }
 }

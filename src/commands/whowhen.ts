@@ -6,6 +6,8 @@ const COMMAND_ENABLED = true;
 const COMMAND_NAME = "whowhen";
 const COMMAND_DESCRIPTION =
     "Check who is currently added to pickup and how long they have been added";
+const DETAILED_DESCRIPTION =
+    "Displays the currently added players by guild display name along with the time they added";
 
 export class WhoCommand extends Command {
     public constructor(context: Command.Context, options: Command.Options) {
@@ -14,6 +16,7 @@ export class WhoCommand extends Command {
             enabled: COMMAND_ENABLED,
             name: COMMAND_NAME,
             description: COMMAND_DESCRIPTION,
+            detailedDescription: DETAILED_DESCRIPTION,
             preconditions: ["Channel"],
         });
     }

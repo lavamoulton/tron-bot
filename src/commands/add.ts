@@ -5,6 +5,8 @@ import type { Message } from "discord.js";
 const COMMAND_ENABLED = true;
 const COMMAND_NAME = "add";
 const COMMAND_DESCRIPTION = "Add to specified playlist(s)";
+const DETAILED_DESCRIPTION =
+    "Type !add <playlist> to add to a specified playlist, or include multiple playlists separated by a space to add to more than one at the same time (e.g., !add fort tst wst). Typing '!add' will add you to both fort and tst by default";
 
 export class AddCommand extends Command {
     public constructor(context: Command.Context, options: Command.Options) {
@@ -13,6 +15,7 @@ export class AddCommand extends Command {
             enabled: COMMAND_ENABLED,
             name: COMMAND_NAME,
             description: COMMAND_DESCRIPTION,
+            detailedDescription: DETAILED_DESCRIPTION,
             preconditions: ["Channel"],
         });
     }
