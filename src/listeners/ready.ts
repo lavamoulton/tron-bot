@@ -36,5 +36,6 @@ export class ReadyListener extends Listener {
                 container.logger.debug(`Precondition: ${precondition.name}`)
             );
         container.db = new DB();
+        container.db.createSchema();
     }
 }

@@ -193,6 +193,7 @@ export class Manager {
         }
 
         if (playlist.addPlayer(user, displayName)) {
+            container.db.updatePlayerRecord(user.id, user.username, displayName);
             return playlist.printList();
         } else {
             return `${user}, you are already added to ${playlist.name}! Refreshing your added at time for auto removal.\n`;
