@@ -20,7 +20,7 @@ export class Manager {
         this.playlists = this.loadPlaylists();
     }
 
-    public addToPlaylists(names: string[], user: User): string {
+    public async addToPlaylists(names: string[], user: User): Promise<string> {
         let result = ``;
         container.logger.debug(`${user.username} is adding to playlists: ${names}`);
         for (const name of names) {
@@ -33,7 +33,7 @@ export class Manager {
             if (playlist.players - playlist.getLength() === 1) {
                 return this.startPlaylist(playlist);
             } else {
-                result += this.addToPlaylist(playlist, user);
+                result += await this.addToPlaylist(playlist, user);
             }
         }
         return result;
@@ -246,7 +246,7 @@ export class Manager {
         }
     }
 
-    private addToPlaylist(playlist: IPlaylist, user: User): string {
+    private async addToPlaylist(playlist: IPlaylist, user: User): Promise<string> {
         let displayName = user.username;
         if (config.GUILD_ID) {
             const guild = container.client.guilds.cache.get(config.GUILD_ID);
@@ -259,7 +259,9 @@ export class Manager {
         }
 
         if (playlist.addPlayer(user, displayName)) {
-            container.logger.debug(JSON.stringify(container.db.getPlayerRecord(user.id)));
+            container.logger.debug(
+                JSON.stringify(await container.db.getPlayerRecord(user.id))
+            );
             container.db.updatePlayerRecord(user.id, user.username, displayName);
             return playlist.printList();
         } else {

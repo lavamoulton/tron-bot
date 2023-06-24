@@ -1,4 +1,4 @@
-import { Database } from "sqlite3";
+import Database, { Database as dbType } from "better-sqlite3";
 import fs from "fs";
 import { container } from "@sapphire/framework";
 
@@ -10,16 +10,11 @@ interface PlayerData {
 }
 
 export class DB {
-    database: Database;
+    database: dbType;
 
     public constructor() {
-        this.database = new Database("./db/pickup.sqlite", (err) => {
-            if (err) {
-                console.error(err.message);
-            } else {
-                console.log("Connected to the pickup database.");
-            }
-        });
+        this.database = new Database("./db/pickup.sqlite");
+        container.logger.debug(`Connected to database.`);
     }
 
     public createSchema(): void {
@@ -39,19 +34,42 @@ export class DB {
         this.database.exec(
             `UPDATE players SET username='${username}', displayName='${displayName}', count=count+1 WHERE id='${id}'`
         );
-        this.database.all(`SELECT * FROM 'players'`, (_, res) => {
-            container.logger.debug(`SET PLAYER RECORD: ${JSON.stringify(res)}`);
+        const statement = this.database.prepare(`SELECT * from 'players'`);
+        const rows = statement.all();
+        rows.forEach((row) => {
+            container.logger.debug(`SET PLAYER RECORD: ${JSON.stringify(row)}`);
         });
     }
 
-    public getPlayerRecord(id: string): PlayerData | undefined {
+    public async getPlayerRecord(id: string): Promise<PlayerData | undefined> {
         container.logger.debug(`Getting player record for ${id}`);
-        this.database.all(`SELECT * FROM 'players'`, (_, res) => {
-            container.logger.debug(`GET PLAYER RECORD: ${JSON.stringify(res)}`);
-        });
+        /*const allStatement = this.database.prepare(`SELECT * from 'players'`);
+        const rows = allStatement.all();
+        rows.forEach((row) => {
+            container.logger.debug(`GET PLAYER RECORD: ${JSON.stringify(row)}`);
+        });*/
         let data: PlayerData | undefined = undefined;
         const statement = this.database.prepare(`SELECT * FROM 'players' WHERE id=?`);
-        statement.run([id], (_: Error, res: PlayerData) => {
+        const playerRow = statement.all([id]);
+        playerRow.forEach((row) => {
+            const rowData = row as PlayerData;
+            if (rowData) {
+                container.logger.debug(`Player record found: ${JSON.stringify(row)}\n
+                id: ${rowData.id}, username: ${rowData.username}, displayName: ${
+                    rowData.displayName
+                }, count: ${rowData.count}`);
+                container.logger.debug(`Object keys: ${Object.keys(rowData)}`);
+                data = {
+                    id: rowData.id,
+                    username: rowData.username,
+                    displayName: rowData.displayName,
+                    count: rowData.count,
+                };
+                container.logger.debug(`Data: ${JSON.stringify(data)}`);
+            }
+        });
+        /*statement.all([`${id}`], (_: Error, res: PlayerData) => {
+            container.logger.debug(`Found res ${JSON.stringify(res)}`);
             if (res) {
                 data = {
                     id: res.id,
@@ -64,10 +82,12 @@ export class DB {
             } else {
                 container.logger.debug(`Did not find record ${JSON.stringify(res)}`);
             }
-        });
+        });*/
         if (!data) {
             container.logger.debug(`Did not find player data, returning undefined`);
             return undefined;
+        } else {
+            return data;
         }
     }
 

@@ -54,9 +54,9 @@ export class AddCommand extends Command {
         const command = splitContent.shift();
         container.logger.debug(`Split args: ${splitContent}`);
         if (splitContent.length > 0) {
-            result = container.manager.addToPlaylists(splitContent, author);
+            result = await container.manager.addToPlaylists(splitContent, author);
         } else {
-            result = container.manager.addToPlaylists(["fort", "tst"], author);
+            result = await container.manager.addToPlaylists(["fort", "tst"], author);
         }
         await message.channel.send(result);
     }
