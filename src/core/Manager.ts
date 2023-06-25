@@ -295,14 +295,14 @@ export class Manager {
         for (const name in this.playlists) {
             const playlist = this.playlists[name];
             if (!playlist.isEmpty()) {
-                result += `|${playlist.name}: (${playlist.getLength()} / ${
+                result += ` |${playlist.name}: (${playlist.getLength()} / ${
                     playlist.players
                 })`;
             }
         }
         if (result.length > 0) {
             let finalResult =
-                `!add for pickup games here. | ` +
+                `!add for pickup games here.` +
                 result +
                 ` | For talk, please use the <#805096704012713985> channel.`;
             await this.channel.setTopic(finalResult);
