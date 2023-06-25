@@ -10,6 +10,14 @@ interface PlayerData {
     tronBucks: number;
 }
 
+interface PlaylistData {
+    name: string;
+    maxPlayers: number;
+    draft: boolean;
+    description: string;
+    count: number;
+}
+
 interface PlaylistCountData {
     id: string;
     name: string;
@@ -22,6 +30,7 @@ interface PlayerStats {
     totalCount: number;
     tronBucks: number;
     playlistCount: { [playlistName: string]: number };
+    totalPlaylistCount: { [playlistName: string]: number };
 }
 
 export class DB {
@@ -160,12 +169,14 @@ export class DB {
             return undefined;
         } else {
             const playlistStats = this.getPlayerPlaylistStats(id);
+            const totalPlaylistStats = this.getPlaylistCount();
             return {
                 id: id,
                 displayName: playerRecord.displayName,
                 totalCount: playerRecord.count,
                 tronBucks: playerRecord.tronBucks,
                 playlistCount: playlistStats,
+                totalPlaylistCount: totalPlaylistStats,
             };
         }
     }
@@ -178,6 +189,17 @@ export class DB {
         const rows = statement.all();
         rows.forEach((row) => {
             const data = row as PlaylistCountData;
+            result[data.name] = data.count;
+        });
+        return result;
+    }
+
+    private getPlaylistCount(): { [playlistName: string]: number } {
+        let result: { [playlistName: string]: number } = {};
+        const statement = this.database.prepare(`SELECT * from playlists`);
+        const rows = statement.all();
+        rows.forEach((row) => {
+            const data = row as PlaylistData;
             result[data.name] = data.count;
         });
         return result;

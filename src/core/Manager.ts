@@ -138,12 +138,16 @@ export class Manager {
             return `No stats found`;
         } else {
             let result = `--- **${playerStats.displayName} stats** ---\n`;
-            result += `**Total games played**: ${playerStats.totalCount}\n`;
-            result += `**Tron bucks**: ${playerStats.tronBucks}\n`;
-            result += `- **Stats by playlist** -`;
+            result += `Total games played: ${playerStats.totalCount}\n`;
+            result += `Tron bucks: ${playerStats.tronBucks}\n`;
+            result += `-- **Stats by playlist** --\n`;
             for (const playlist in playerStats.playlistCount) {
                 const count = playerStats.playlistCount[playlist];
-                result += `**${playlist} games played**: ${count}\n`;
+                const totalCount = playerStats.totalPlaylistCount[playlist];
+                const percentage = (count / totalCount) * 100;
+                result += `${playlist} games played: ${count} (${percentage.toFixed(
+                    2
+                )}% of total games)\n`;
             }
             return result;
         }
@@ -377,7 +381,6 @@ export class Manager {
     }
 
     private startPlaylist(playlist: IPlaylist): string {
-        container.logger.debug(`Starting playlist ${JSON.stringify(playlist)}`);
         let result = `----- ${playlist.name} ready to start! -----\n`;
         container.db.updatePlaylistRecord(playlist.name);
         let playerList: string[] = this.shuffle(Object.keys(playlist.list));
@@ -411,7 +414,7 @@ export class Manager {
             return result;
         }
 
-        container.db.updatePlaylistRecord(playlist.name);
+        container.logger.debug(`Error starting playlist ${JSON.stringify(playlist)}`);
         return `Playlist could not be started`;
     }
 
