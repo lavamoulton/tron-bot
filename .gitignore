@@ -18,4 +18,4 @@ yarn.lock
 
 captains.yml
 *.txt
-db/pickup.sqlite
+db/*.sqlite

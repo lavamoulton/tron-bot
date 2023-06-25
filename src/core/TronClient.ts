@@ -35,7 +35,6 @@ export class TronClient extends SapphireClient {
     }
 
     public async login(token?: string) {
-        container.manager = new Manager();
         const loginResponse = await super.login(token);
         return loginResponse;
     }

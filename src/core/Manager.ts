@@ -131,6 +131,24 @@ export class Manager {
         return result;
     }
 
+    public getStats(id: string): string {
+        const playerStats = container.db.getPlayerStats(id);
+        if (!playerStats) {
+            container.logger.error(`No stats found for ${id}`);
+            return `No stats found`;
+        } else {
+            let result = `--- **${playerStats.displayName} stats** ---\n`;
+            result += `**Total games played**: ${playerStats.totalCount}\n`;
+            result += `**Tron bucks**: ${playerStats.tronBucks}\n`;
+            result += `- **Stats by playlist** -`;
+            for (const playlist in playerStats.playlistCount) {
+                const count = playerStats.playlistCount[playlist];
+                result += `**${playlist} games played**: ${count}\n`;
+            }
+            return result;
+        }
+    }
+
     public async warnAndExpirePlayers(): Promise<void> {
         if (!this.channel) {
             const channel = container.client.channels.cache.get(config.OUTPUT_CHANNEL!);
@@ -168,15 +186,6 @@ export class Manager {
                             } else {
                                 expiredPlayers[user.id].push(playlist.name);
                             }
-                            /*if (!user.dmChannel) {
-                                container.logger.debug(
-                                    `Attempting to create DM channel with ${user.displayName}`
-                                );
-                                await user.createDM(true);
-                            }
-                            user.dmChannel?.send(
-                                `Auto removing you from ${playlist.name}, please re-add in <#${this.channel.id}>`
-                            );*/
                         } else {
                             container.logger.error(`Did not find user ${playerID}`);
                         }
@@ -226,21 +235,6 @@ export class Manager {
                             } else {
                                 warnedPlayers[user.id].push(playlist.name);
                             }
-                            /*
-                            if (!user.dmChannel) {
-                                container.logger.debug(
-                                    `Attempting to create DM channel with ${user.displayName}`
-                                );
-                                await user.createDM(true);
-                            }
-                            user.dmChannel?.send(
-                                `Auto removing you from ${playlist.name} in ${
-                                    config.EXPIRE_AFTER_TIME_IN_MINUTES -
-                                    config.WARN_AFTER_TIME_IN_MINUTES
-                                } minutes, please re-add in <#${
-                                    this.channel.id
-                                }> to reset timer`
-                            );*/
                         } else {
                             container.logger.error(`Did not find user ${playerID}`);
                         }
@@ -368,6 +362,12 @@ export class Manager {
                 Players: ${playlists[name].players}
                 Draft: ${playlists[name].draft}
                 Description: ${playlists[name].description}`);
+                container.db.createPlaylistRecord(
+                    pFileLists[name].name,
+                    pFileLists[name].players,
+                    pFileLists[name].draft,
+                    pFileLists[name].description
+                );
             }
             return playlists;
         } catch (e) {
@@ -378,11 +378,17 @@ export class Manager {
 
     private startPlaylist(playlist: IPlaylist): string {
         let result = `----- ${playlist.name} ready to start! -----\n`;
+        container.db.updatePlaylistRecord(playlist.name);
         let playerList: string[] = this.shuffle(Object.keys(playlist.list));
         for (let id of playerList) {
             if (!id.startsWith(`dummy`)) {
                 const data = playlist.list[id];
-                container.db.updatePlayerRecord(data.id, data.username, data.displayName);
+                container.db.updatePlayerRecord(
+                    data.id,
+                    data.username,
+                    data.displayName,
+                    playlist.name
+                );
             } else {
                 container.logger.debug(`Skipping dummy data`);
             }
@@ -425,17 +431,34 @@ export class Manager {
         console.log(`Non captains: ${nonCaptains}`);
         let result =
             `Team blue captain <:ddef_blue:869978902855028767>: <@${captain1}>\n` +
-            `Team gold captain <:ddef_gold:869978924795461662>: <@${captain2}>\n` +
-            `Players: ${nonCaptains}`;
+            `Team gold captain <:ddef_gold:869978924795461662>: <@${captain2}>\n`;
+        let first = true;
+        nonCaptains.forEach((player) => {
+            if (first) {
+                result += `Players: ${player}`;
+                first = false;
+            } else {
+                result += `, ${player}`;
+            }
+        });
         return result;
     }
 
     private getTST(playerList: string[]): string {
-        let result =
-            `Team purple <:cycle8:736663857300242555>: <@${playerList[0]}>, <@${playerList[1]}>\n` +
-            `Team orange <:cycle7:736663857606557807>: <@${playerList[2]}>, <@${playerList[3]}>\n` +
-            `Team ugly <:cycle6:736663857589649468>: <@${playerList[4]}>, <@${playerList[5]}>\n` +
-            `Team gold <:cycle2:736663849763209227>: <@${playerList[6]}>, <@${playerList[7]}>\n`;
+        let result = `Could not start playlist`;
+        if (config.ENVIRONMENT === "development") {
+            result =
+                `Team purple: <@${playerList[0]}>, <@${playerList[1]}>\n` +
+                `Team orange: <@${playerList[2]}>, <@${playerList[3]}>\n` +
+                `Team ugly: <@${playerList[4]}>, <@${playerList[5]}>\n` +
+                `Team gold: <@${playerList[6]}>, <@${playerList[7]}>\n`;
+        } else {
+            result =
+                `Team purple <:cycle8:736663857300242555>: <@${playerList[0]}>, <@${playerList[1]}>\n` +
+                `Team orange <:cycle7:736663857606557807>: <@${playerList[2]}>, <@${playerList[3]}>\n` +
+                `Team ugly <:cycle6:736663857589649468>: <@${playerList[4]}>, <@${playerList[5]}>\n` +
+                `Team gold <:cycle2:736663849763209227>: <@${playerList[6]}>, <@${playerList[7]}>\n`;
+        }
         return result;
     }
 

@@ -1,6 +1,7 @@
 import { Listener, container } from "@sapphire/framework";
 import type { Client } from "discord.js";
 import { DB } from "../db/db";
+import { Manager } from "../core/Manager";
 
 export class ReadyListener extends Listener {
     public constructor(context: Listener.Context, options: Listener.Options) {
@@ -14,6 +15,11 @@ export class ReadyListener extends Listener {
     public async run(client: Client) {
         const { username, id } = client.user!;
         container.logger.info(`Successfully logged in as ${username} (${id})`);
+
+        container.db = new DB();
+        container.db.createSchema();
+        container.manager = new Manager();
+
         setInterval(async () => {
             container.logger.trace(`Checking for warnings and autoremovals`);
             await container.manager.warnAndExpirePlayers();
@@ -35,7 +41,5 @@ export class ReadyListener extends Listener {
             .forEach((precondition) =>
                 container.logger.trace(`Precondition: ${precondition.name}`)
             );
-        container.db = new DB();
-        container.db.createSchema();
     }
 }
