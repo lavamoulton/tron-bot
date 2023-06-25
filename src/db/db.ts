@@ -33,8 +33,8 @@ export class DB {
     }
 
     public createSchema(): void {
-        container.logger.debug(`Clearing tables`);
-        this.database.exec(`${fs.readFileSync("./db/sql/drop.sql").toString()}`);
+        /*container.logger.debug(`Clearing tables`);
+        this.database.exec(`${fs.readFileSync("./db/sql/drop.sql").toString()}`);*/
         container.logger.debug(`Creating players table`);
         this.database.exec(`${fs.readFileSync("./db/sql/players.sql").toString()}`);
         container.logger.debug(`Creating playlists table`);

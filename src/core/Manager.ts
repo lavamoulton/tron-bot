@@ -43,7 +43,7 @@ export class Manager {
         const playlist = this.playlists[playlistName];
         if (!playlist) {
             container.logger.error(`Did not find playlist ${playlistName}`);
-            return ``;
+            return `Did not find playlist ${playlistName}`;
         }
         while (!playlist.isFull()) {
             playlist.addDummy();
@@ -377,6 +377,7 @@ export class Manager {
     }
 
     private startPlaylist(playlist: IPlaylist): string {
+        container.logger.debug(`Starting playlist ${JSON.stringify(playlist)}`);
         let result = `----- ${playlist.name} ready to start! -----\n`;
         container.db.updatePlaylistRecord(playlist.name);
         let playerList: string[] = this.shuffle(Object.keys(playlist.list));
@@ -399,17 +400,18 @@ export class Manager {
             this.clearPlaylists(playlist);
             return result;
         }
-        if (playlist.name === "tst") {
+        if (playlist.name.toLowerCase() === "tst") {
             result += `${this.getTST(playerList)}\n`;
             this.clearPlaylists(playlist);
             return result;
         }
-        if (playlist.name === "sumobar") {
+        if (playlist.name.toLowerCase() === "sumobar") {
             result += `${this.getSumobar(playerList)}\n`;
             this.clearPlaylists(playlist);
             return result;
         }
 
+        container.db.updatePlaylistRecord(playlist.name);
         return `Playlist could not be started`;
     }
 
