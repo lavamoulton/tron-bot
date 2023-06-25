@@ -39,6 +39,20 @@ export class Manager {
         return result;
     }
 
+    public forceStartPlaylist(playlistName: string): string {
+        const playlist = this.playlists[playlistName];
+        if (!playlist) {
+            container.logger.error(`Did not find playlist ${playlistName}`);
+            return ``;
+        }
+        while (!playlist.isFull()) {
+            playlist.addDummy();
+        }
+        container.logger.debug(playlist.printList());
+        const result = this.startPlaylist(playlist);
+        return result;
+    }
+
     public removeAllPlaylists(user: User): string {
         return this.removeFromPlaylists(this.options, user, true);
     }
@@ -70,6 +84,26 @@ export class Manager {
             return `${user}, you are not added to any playlists!\n`;
         }
         return result;
+    }
+
+    public removeIDFromPlaylists(id: string): string {
+        let result = ``;
+        if (config.GUILD_ID) {
+            const guild = container.client.guilds.cache.get(config.GUILD_ID);
+            if (guild) {
+                const guildMember = guild.members.cache.get(id);
+                if (guildMember) {
+                    result = this.removeAllPlaylists(guildMember.user);
+                    return result;
+                } else {
+                    result = `Did not find guild member ${id}`;
+                    return result;
+                }
+            }
+        } else {
+            container.logger.error(`Did not find Guild`);
+        }
+        return `Error removing ${id}`;
     }
 
     public getAddedPlayers(detailed: boolean): string {
@@ -246,6 +280,43 @@ export class Manager {
         }
     }
 
+    public async updateTopic(): Promise<boolean> {
+        if (!this.channel) {
+            const channel = container.client.channels.cache.get(config.OUTPUT_CHANNEL!);
+            if (channel) {
+                this.channel = channel as TextChannel;
+                container.logger.info(`Setting output channel`);
+            } else {
+                container.logger.error(`Could not find output channel`);
+                return false;
+            }
+        }
+        let result = ``;
+        for (const name in this.playlists) {
+            const playlist = this.playlists[name];
+            if (!playlist.isEmpty()) {
+                result += `|${playlist.name}: (${playlist.getLength()} / ${
+                    playlist.players
+                })`;
+            }
+        }
+        if (result.length > 0) {
+            let finalResult =
+                `!add for pickup games here. | ` +
+                result +
+                ` | For talk, please use the <#805096704012713985> channel.`;
+            await this.channel.setTopic(finalResult);
+            return true;
+        } else {
+            let finalResult =
+                `!add for pickup games here. | ` +
+                `No players added. | ` +
+                `For talk, please use the <#805096704012713985> channel.`;
+            await this.channel.setTopic(finalResult);
+            return true;
+        }
+    }
+
     private async addToPlaylist(playlist: IPlaylist, user: User): Promise<string> {
         let displayName = user.username;
         let username = user.username;
@@ -336,20 +407,6 @@ export class Manager {
         return `Playlist could not be started`;
     }
 
-    public forceStartPlaylist(playlistName: string): string {
-        const playlist = this.playlists[playlistName];
-        if (!playlist) {
-            container.logger.error(`Did not find playlist ${playlistName}`);
-            return ``;
-        }
-        while (!playlist.isFull()) {
-            playlist.addDummy();
-        }
-        container.logger.debug(playlist.printList());
-        const result = this.startPlaylist(playlist);
-        return result;
-    }
-
     private shuffle(array: any[]) {
         for (var i = array.length - 1; i > 0; i--) {
             var j = Math.floor(Math.random() * (i + 1));
@@ -411,42 +468,5 @@ export class Manager {
             }
         }
         playlist.clearList();
-    }
-
-    public async updateTopic(): Promise<boolean> {
-        if (!this.channel) {
-            const channel = container.client.channels.cache.get(config.OUTPUT_CHANNEL!);
-            if (channel) {
-                this.channel = channel as TextChannel;
-                container.logger.info(`Setting output channel`);
-            } else {
-                container.logger.error(`Could not find output channel`);
-                return false;
-            }
-        }
-        let result = ``;
-        for (const name in this.playlists) {
-            const playlist = this.playlists[name];
-            if (!playlist.isEmpty()) {
-                result += `|${playlist.name}: (${playlist.getLength()} / ${
-                    playlist.players
-                })`;
-            }
-        }
-        if (result.length > 0) {
-            let finalResult =
-                `!add for pickup games here.` +
-                result +
-                `|For talk, please use the <#805096704012713985> channel.`;
-            await this.channel.setTopic(finalResult);
-            return true;
-        } else {
-            let finalResult =
-                `!add for pickup games here.|` +
-                `No players added.|` +
-                `For talk, please use the <#805096704012713985> channel.`;
-            await this.channel.setTopic(finalResult);
-            return true;
-        }
     }
 }
