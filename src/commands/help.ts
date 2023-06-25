@@ -40,7 +40,7 @@ export class AddCommand extends Command {
                     command[0] === "help" ||
                     command[0] === "ping" ||
                     command[0] === "start" ||
-                    command[0] === "adminRemove"
+                    command[0] === "adminremove"
                 ) {
                     continue;
                 }
