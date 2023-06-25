@@ -248,6 +248,7 @@ export class Manager {
 
     private async addToPlaylist(playlist: IPlaylist, user: User): Promise<string> {
         let displayName = user.username;
+        let username = user.username;
         if (config.GUILD_ID) {
             const guild = container.client.guilds.cache.get(config.GUILD_ID);
             if (guild) {
@@ -258,11 +259,10 @@ export class Manager {
             }
         }
 
-        if (playlist.addPlayer(user, displayName)) {
+        if (playlist.addPlayer(user, username, displayName)) {
             container.logger.debug(
                 JSON.stringify(await container.db.getPlayerRecord(user.id))
             );
-            container.db.updatePlayerRecord(user.id, user.username, displayName);
             return playlist.printList();
         } else {
             return `${user}, you are already added to ${playlist.name}! Refreshing your added at time for auto removal.\n`;
@@ -307,7 +307,15 @@ export class Manager {
 
     private startPlaylist(playlist: IPlaylist): string {
         let result = `----- ${playlist.name} ready to start! -----\n`;
-        let playerList = this.shuffle(Object.keys(playlist.list));
+        let playerList: string[] = this.shuffle(Object.keys(playlist.list));
+        for (let id of playerList) {
+            if (!id.startsWith(`dummy`)) {
+                const data = playlist.list[id];
+                container.db.updatePlayerRecord(data.id, data.username, data.displayName);
+            } else {
+                container.logger.debug(`Skipping dummy data`);
+            }
+        }
         if (playlist.draft) {
             console.log(`Player list: ${playerList}`);
             result += `${this.getDraft(playerList)}\n`;
@@ -326,6 +334,20 @@ export class Manager {
         }
 
         return `Playlist could not be started`;
+    }
+
+    public forceStartPlaylist(playlistName: string): string {
+        const playlist = this.playlists[playlistName];
+        if (!playlist) {
+            container.logger.error(`Did not find playlist ${playlistName}`);
+            return ``;
+        }
+        while (!playlist.isFull()) {
+            playlist.addDummy();
+        }
+        container.logger.debug(playlist.printList());
+        const result = this.startPlaylist(playlist);
+        return result;
     }
 
     private shuffle(array: any[]) {

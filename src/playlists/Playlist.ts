@@ -7,7 +7,8 @@ interface IPlaylist {
     draft: boolean;
     description: string;
     list: { [id: string]: IAddedUser };
-    addPlayer(user: User, displayName: string): boolean;
+    addPlayer(user: User, username: string, displayName: string): boolean;
+    addDummy(): void;
     removePlayer(user: User): boolean;
     isPlayerAdded(user: User): boolean;
     isFull(): boolean;
@@ -20,6 +21,7 @@ interface IPlaylist {
 
 interface IAddedUser {
     id: string;
+    username: string;
     displayName: string;
     addedAt: Date;
     warned: boolean;
@@ -50,19 +52,31 @@ export class Playlist implements IPlaylist {
         this.list = {};
     }
 
-    addPlayer(user: User, displayName: string): boolean {
+    addPlayer(user: User, username: string, displayName: string): boolean {
         if (this.isPlayerAdded(user)) {
             this.refreshPlayerAddedAt(user);
             return false;
         } else {
             this.list[user.id] = {
                 id: user.id,
+                username: username,
                 displayName: displayName,
                 addedAt: new Date(),
                 warned: false,
             };
             return true;
         }
+    }
+
+    addDummy(): boolean {
+        this.list[`dummy${this.getLength()}`] = {
+            id: `dummy${this.getLength()}`,
+            username: `dummy${this.getLength()}`,
+            displayName: `dummy${this.getLength()}`,
+            addedAt: new Date(),
+            warned: false,
+        };
+        return true;
     }
 
     removePlayer(user: User | IAddedUser): boolean {

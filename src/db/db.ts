@@ -68,21 +68,6 @@ export class DB {
                 container.logger.debug(`Data: ${JSON.stringify(data)}`);
             }
         });
-        /*statement.all([`${id}`], (_: Error, res: PlayerData) => {
-            container.logger.debug(`Found res ${JSON.stringify(res)}`);
-            if (res) {
-                data = {
-                    id: res.id,
-                    username: res.username,
-                    displayName: res.displayName,
-                    count: res.count,
-                };
-                container.logger.debug(JSON.stringify(data));
-                return data;
-            } else {
-                container.logger.debug(`Did not find record ${JSON.stringify(res)}`);
-            }
-        });*/
         if (!data) {
             container.logger.debug(`Did not find player data, returning undefined`);
             return undefined;
