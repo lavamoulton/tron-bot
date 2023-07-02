@@ -20,7 +20,7 @@ export class Manager {
         this.playlists = this.loadPlaylists();
     }
 
-    public addToPlaylists(names: string[], user: User): string {
+    public async addToPlaylists(names: string[], user: User): Promise<string> {
         let result = ``;
         container.logger.debug(`${user.username} is adding to playlists: ${names}`);
         for (const name of names) {
@@ -33,9 +33,23 @@ export class Manager {
             if (playlist.players - playlist.getLength() === 1) {
                 return this.startPlaylist(playlist);
             } else {
-                result += this.addToPlaylist(playlist, user);
+                result += await this.addToPlaylist(playlist, user);
             }
         }
+        return result;
+    }
+
+    public forceStartPlaylist(playlistName: string): string {
+        const playlist = this.playlists[playlistName];
+        if (!playlist) {
+            container.logger.error(`Did not find playlist ${playlistName}`);
+            return `Did not find playlist ${playlistName}`;
+        }
+        while (!playlist.isFull()) {
+            playlist.addDummy();
+        }
+        container.logger.debug(playlist.printList());
+        const result = this.startPlaylist(playlist);
         return result;
     }
 
@@ -72,6 +86,26 @@ export class Manager {
         return result;
     }
 
+    public removeIDFromPlaylists(id: string): string {
+        let result = ``;
+        if (config.GUILD_ID) {
+            const guild = container.client.guilds.cache.get(config.GUILD_ID);
+            if (guild) {
+                const guildMember = guild.members.cache.get(id);
+                if (guildMember) {
+                    result = this.removeAllPlaylists(guildMember.user);
+                    return result;
+                } else {
+                    result = `Did not find guild member ${id}`;
+                    return result;
+                }
+            }
+        } else {
+            container.logger.error(`Did not find Guild`);
+        }
+        return `Error removing ${id}`;
+    }
+
     public getAddedPlayers(detailed: boolean): string {
         let result = `No players added.`;
         let first = true;
@@ -97,6 +131,28 @@ export class Manager {
         return result;
     }
 
+    public getStats(id: string): string {
+        const playerStats = container.db.getPlayerStats(id);
+        if (!playerStats) {
+            container.logger.error(`No stats found for ${id}`);
+            return `No stats found`;
+        } else {
+            let result = `--- **${playerStats.displayName} stats** ---\n`;
+            result += `Total games played: ${playerStats.totalCount}\n`;
+            result += `Tron bucks: ${playerStats.tronBucks}\n`;
+            result += `-- **Stats by playlist** --\n`;
+            for (const playlist in playerStats.playlistCount) {
+                const count = playerStats.playlistCount[playlist];
+                const totalCount = playerStats.totalPlaylistCount[playlist];
+                const percentage = (count / totalCount) * 100;
+                result += `${playlist} games played: ${count} (${percentage.toFixed(
+                    2
+                )}% of total games)\n`;
+            }
+            return result;
+        }
+    }
+
     public async warnAndExpirePlayers(): Promise<void> {
         if (!this.channel) {
             const channel = container.client.channels.cache.get(config.OUTPUT_CHANNEL!);
@@ -107,10 +163,6 @@ export class Manager {
                 container.logger.error(`Could not find output channel for autoremoval`);
             }
         } else {
-            /*
-            if (result.length > 0) {
-                this.channel.send(result);
-            }*/
             let guild;
             if (config.GUILD_ID) {
                 const temp = container.client.guilds.cache.get(config.GUILD_ID);
@@ -122,6 +174,7 @@ export class Manager {
                 container.logger.error(`Did not find guild`);
                 return;
             }
+            let expiredPlayers: { [id: string]: string[] } = {};
             for (let i in this.playlists) {
                 const playlist = this.playlists[i];
                 const expiredPlayerIDs = playlist.expirePlayers();
@@ -132,21 +185,45 @@ export class Manager {
                     for (const playerID of expiredPlayerIDs) {
                         const user = guild.members.cache.get(playerID);
                         if (user) {
-                            if (!user.dmChannel) {
-                                container.logger.debug(
-                                    `Attempting to create DM channel with ${user.displayName}`
-                                );
-                                await user.createDM(true);
+                            if (!expiredPlayers[user.id]) {
+                                expiredPlayers[user.id] = [playlist.name];
+                            } else {
+                                expiredPlayers[user.id].push(playlist.name);
                             }
-                            user.dmChannel?.send(
-                                `Auto removing you from ${playlist.name}, please re-add in <#${this.channel.id}>`
-                            );
                         } else {
                             container.logger.error(`Did not find user ${playerID}`);
                         }
                     }
                 }
             }
+            for (const id in expiredPlayers) {
+                const playlists = expiredPlayers[id];
+                let result = `Auto removing you from `;
+                let first = true;
+                playlists.forEach((playlist) => {
+                    if (first) {
+                        result += `${playlist}`;
+                        first = false;
+                    } else {
+                        result += `, ${playlist}`;
+                    }
+                });
+                result += `. Please re-add in <#${this.channel.id}>`;
+                const member = guild.members.cache.get(id);
+                if (member) {
+                    if (!member.dmChannel) {
+                        container.logger.debug(
+                            `Attempting to create DM channel with ${member.displayName}`
+                        );
+                        await member.createDM(true);
+                    }
+                    member.dmChannel?.send(result);
+                } else {
+                    container.logger.error(`Did not find guild member ${id}`);
+                }
+            }
+
+            let warnedPlayers: { [id: string]: string[] } = {};
             for (let i in this.playlists) {
                 const playlist = this.playlists[i];
                 const warnedPlayerIDs = playlist.warnPlayers();
@@ -157,31 +234,90 @@ export class Manager {
                     for (const playerID of warnedPlayerIDs) {
                         const user = guild.members.cache.get(playerID);
                         if (user) {
-                            if (!user.dmChannel) {
-                                container.logger.debug(
-                                    `Attempting to create DM channel with ${user.displayName}`
-                                );
-                                await user.createDM(true);
+                            if (!warnedPlayers[user.id]) {
+                                warnedPlayers[user.id] = [playlist.name];
+                            } else {
+                                warnedPlayers[user.id].push(playlist.name);
                             }
-                            user.dmChannel?.send(
-                                `Auto removing you from ${playlist.name} in ${
-                                    config.EXPIRE_AFTER_TIME_IN_MINUTES -
-                                    config.WARN_AFTER_TIME_IN_MINUTES
-                                } minutes, please re-add in <#${
-                                    this.channel.id
-                                }> to reset timer`
-                            );
                         } else {
                             container.logger.error(`Did not find user ${playerID}`);
                         }
                     }
                 }
             }
+            for (const id in warnedPlayers) {
+                const playlists = warnedPlayers[id];
+                let result = `Auto removing you from `;
+                let first = true;
+                playlists.forEach((playlist) => {
+                    if (first) {
+                        result += `${playlist}`;
+                        first = false;
+                    } else {
+                        result += `, ${playlist}`;
+                    }
+                });
+                result += ` in ${
+                    config.EXPIRE_AFTER_TIME_IN_MINUTES -
+                    config.WARN_AFTER_TIME_IN_MINUTES
+                } minutes. `;
+                result += `Please re-add in <#${this.channel.id}> to reset timer`;
+                const member = guild.members.cache.get(id);
+                if (member) {
+                    if (!member.dmChannel) {
+                        container.logger.debug(
+                            `Attempting to create DM channel with ${member.displayName}`
+                        );
+                        await member.createDM(true);
+                    }
+                    member.dmChannel?.send(result);
+                } else {
+                    container.logger.error(`Did not find guild member ${id}`);
+                }
+            }
         }
     }
 
-    private addToPlaylist(playlist: IPlaylist, user: User): string {
+    public async updateTopic(): Promise<boolean> {
+        if (!this.channel) {
+            const channel = container.client.channels.cache.get(config.OUTPUT_CHANNEL!);
+            if (channel) {
+                this.channel = channel as TextChannel;
+                container.logger.info(`Setting output channel`);
+            } else {
+                container.logger.error(`Could not find output channel`);
+                return false;
+            }
+        }
+        let result = ``;
+        for (const name in this.playlists) {
+            const playlist = this.playlists[name];
+            if (!playlist.isEmpty()) {
+                result += ` |${playlist.name}: (${playlist.getLength()} / ${
+                    playlist.players
+                })`;
+            }
+        }
+        if (result.length > 0) {
+            let finalResult =
+                `!add for pickup games here.` +
+                result +
+                ` | For talk, please use the <#805096704012713985> channel.`;
+            await this.channel.setTopic(finalResult);
+            return true;
+        } else {
+            let finalResult =
+                `!add for pickup games here. | ` +
+                `No players added. | ` +
+                `For talk, please use the <#805096704012713985> channel.`;
+            await this.channel.setTopic(finalResult);
+            return true;
+        }
+    }
+
+    private async addToPlaylist(playlist: IPlaylist, user: User): Promise<string> {
         let displayName = user.username;
+        let username = user.username;
         if (config.GUILD_ID) {
             const guild = container.client.guilds.cache.get(config.GUILD_ID);
             if (guild) {
@@ -192,7 +328,10 @@ export class Manager {
             }
         }
 
-        if (playlist.addPlayer(user, displayName)) {
+        if (playlist.addPlayer(user, username, displayName)) {
+            container.logger.debug(
+                JSON.stringify(await container.db.getPlayerRecord(user.id))
+            );
             return playlist.printList();
         } else {
             return `${user}, you are already added to ${playlist.name}! Refreshing your added at time for auto removal.\n`;
@@ -227,6 +366,12 @@ export class Manager {
                 Players: ${playlists[name].players}
                 Draft: ${playlists[name].draft}
                 Description: ${playlists[name].description}`);
+                container.db.createPlaylistRecord(
+                    pFileLists[name].name,
+                    pFileLists[name].players,
+                    pFileLists[name].draft,
+                    pFileLists[name].description
+                );
             }
             return playlists;
         } catch (e) {
@@ -237,24 +382,39 @@ export class Manager {
 
     private startPlaylist(playlist: IPlaylist): string {
         let result = `----- ${playlist.name} ready to start! -----\n`;
-        let playerList = this.shuffle(Object.keys(playlist.list));
+        container.db.updatePlaylistRecord(playlist.name);
+        let playerList: string[] = this.shuffle(Object.keys(playlist.list));
+        for (let id of playerList) {
+            if (!id.startsWith(`dummy`)) {
+                const data = playlist.list[id];
+                container.db.updatePlayerRecord(
+                    data.id,
+                    data.username,
+                    data.displayName,
+                    playlist.name
+                );
+            } else {
+                container.logger.debug(`Skipping dummy data`);
+            }
+        }
         if (playlist.draft) {
             console.log(`Player list: ${playerList}`);
             result += `${this.getDraft(playerList)}\n`;
             this.clearPlaylists(playlist);
             return result;
         }
-        if (playlist.name === "tst") {
+        if (playlist.name.toLowerCase() === "tst") {
             result += `${this.getTST(playerList)}\n`;
             this.clearPlaylists(playlist);
             return result;
         }
-        if (playlist.name === "sumobar") {
+        if (playlist.name.toLowerCase() === "sumobar") {
             result += `${this.getSumobar(playerList)}\n`;
             this.clearPlaylists(playlist);
             return result;
         }
 
+        container.logger.debug(`Error starting playlist ${JSON.stringify(playlist)}`);
         return `Playlist could not be started`;
     }
 
@@ -276,17 +436,34 @@ export class Manager {
         console.log(`Non captains: ${nonCaptains}`);
         let result =
             `Team blue captain <:ddef_blue:869978902855028767>: <@${captain1}>\n` +
-            `Team gold captain <:ddef_gold:869978924795461662>: <@${captain2}>\n` +
-            `Players: ${nonCaptains}`;
+            `Team gold captain <:ddef_gold:869978924795461662>: <@${captain2}>\n`;
+        let first = true;
+        nonCaptains.forEach((player) => {
+            if (first) {
+                result += `Players: ${player}`;
+                first = false;
+            } else {
+                result += `, ${player}`;
+            }
+        });
         return result;
     }
 
     private getTST(playerList: string[]): string {
-        let result =
-            `Team purple <:cycle8:736663857300242555>: <@${playerList[0]}>, <@${playerList[1]}>\n` +
-            `Team orange <:cycle7:736663857606557807>: <@${playerList[2]}>, <@${playerList[3]}>\n` +
-            `Team ugly <:cycle6:736663857589649468>: <@${playerList[4]}>, <@${playerList[5]}>\n` +
-            `Team gold <:cycle2:736663849763209227>: <@${playerList[6]}>, <@${playerList[7]}>\n`;
+        let result = `Could not start playlist`;
+        if (config.ENVIRONMENT === "development") {
+            result =
+                `Team purple: <@${playerList[0]}>, <@${playerList[1]}>\n` +
+                `Team orange: <@${playerList[2]}>, <@${playerList[3]}>\n` +
+                `Team ugly: <@${playerList[4]}>, <@${playerList[5]}>\n` +
+                `Team gold: <@${playerList[6]}>, <@${playerList[7]}>\n`;
+        } else {
+            result =
+                `Team purple <:cycle8:736663857300242555>: <@${playerList[0]}>, <@${playerList[1]}>\n` +
+                `Team orange <:cycle7:736663857606557807>: <@${playerList[2]}>, <@${playerList[3]}>\n` +
+                `Team ugly <:cycle6:736663857589649468>: <@${playerList[4]}>, <@${playerList[5]}>\n` +
+                `Team gold <:cycle2:736663849763209227>: <@${playerList[6]}>, <@${playerList[7]}>\n`;
+        }
         return result;
     }
 
@@ -319,42 +496,5 @@ export class Manager {
             }
         }
         playlist.clearList();
-    }
-
-    public async updateTopic(): Promise<boolean> {
-        if (!this.channel) {
-            const channel = container.client.channels.cache.get(config.OUTPUT_CHANNEL!);
-            if (channel) {
-                this.channel = channel as TextChannel;
-                container.logger.info(`Setting output channel`);
-            } else {
-                container.logger.error(`Could not find output channel`);
-                return false;
-            }
-        }
-        let result = ``;
-        for (const name in this.playlists) {
-            const playlist = this.playlists[name];
-            if (!playlist.isEmpty()) {
-                result += `| ${playlist.name}: (${playlist.getLength()} / ${
-                    playlist.players
-                })`;
-            }
-        }
-        if (result.length > 0) {
-            let finalResult =
-                `!add for pickup games here.` +
-                result +
-                `For talk, please use the <#805096704012713985> channel.`;
-            await this.channel.setTopic(finalResult);
-            return true;
-        } else {
-            let finalResult =
-                `!add for pickup games here. | ` +
-                `No players added. ` +
-                `For talk, please use the <#805096704012713985> channel.`;
-            await this.channel.setTopic(finalResult);
-            return true;
-        }
     }
 }

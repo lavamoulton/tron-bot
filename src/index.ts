@@ -10,5 +10,6 @@ const client = new TronClient();
         await client.login(config.TOKEN);
     } catch (error) {
         container.logger.error(error);
+        container.db.close();
     }
 })();
