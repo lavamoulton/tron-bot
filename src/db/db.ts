@@ -98,32 +98,40 @@ export class DB {
         displayName: string,
         playlistName: string
     ): void {
-        container.logger.debug(
-            `Updating or creating db record for ${username}. displayName: ${displayName}, id: ${id}`
-        );
-        this.database.exec(`
-            INSERT OR IGNORE INTO players (id, username, displayName, count, tronBucks)
-                VALUES ('${id}', '${username}', '${displayName}', 0, 0)`);
-        this.database.exec(
-            `UPDATE players SET username='${username}', displayName='${displayName}', count=count+1, tronBucks=tronBucks+10 WHERE id='${id}'`
-        );
-        this.database.exec(`
-            INSERT OR IGNORE INTO playlistCount (name, id, count)
-                VALUES ('${playlistName}', '${id}', 0)`);
-        this.database.exec(`
-            UPDATE playlistCount SET count=count+1 WHERE name='${playlistName}' AND id='${id}'`);
-        const statement = this.database.prepare(`SELECT * from players`);
-        const rows = statement.all();
-        rows.forEach((row) => {
-            container.logger.debug(`SET PLAYER RECORD (players): ${JSON.stringify(row)}`);
-        });
-        const playlistStatement = this.database.prepare(`SELECT * from playlistCount`);
-        const playlistRows = playlistStatement.all();
-        playlistRows.forEach((row) => {
+        try {
             container.logger.debug(
-                `SET PLAYER RECORD (playlistCount): ${JSON.stringify(row)}`
+                `Updating or creating db record for ${username}. displayName: ${displayName}, id: ${id}`
             );
-        });
+            this.database.exec(`
+                INSERT OR IGNORE INTO players (id, username, displayName, count, tronBucks)
+                    VALUES ('${id}', '${username}', '${displayName}', 0, 0)`);
+            this.database.exec(
+                `UPDATE players SET username='${username}', displayName='${displayName}', count=count+1, tronBucks=tronBucks+10 WHERE id='${id}'`
+            );
+            this.database.exec(`
+                INSERT OR IGNORE INTO playlistCount (name, id, count)
+                    VALUES ('${playlistName}', '${id}', 0)`);
+            this.database.exec(`
+                UPDATE playlistCount SET count=count+1 WHERE name='${playlistName}' AND id='${id}'`);
+            const statement = this.database.prepare(`SELECT * from players`);
+            const rows = statement.all();
+            rows.forEach((row) => {
+                container.logger.debug(
+                    `SET PLAYER RECORD (players): ${JSON.stringify(row)}`
+                );
+            });
+            const playlistStatement = this.database.prepare(
+                `SELECT * from playlistCount`
+            );
+            const playlistRows = playlistStatement.all();
+            playlistRows.forEach((row) => {
+                container.logger.debug(
+                    `SET PLAYER RECORD (playlistCount): ${JSON.stringify(row)}`
+                );
+            });
+        } catch (error) {
+            container.logger.error(error);
+        }
     }
 
     public getPlayerRecord(id: string): PlayerData | undefined {
@@ -163,21 +171,25 @@ export class DB {
     }
 
     public getPlayerStats(id: string): PlayerStats | undefined {
-        const playerRecord = this.getPlayerRecord(id);
-        if (!playerRecord) {
-            container.logger.error(`No stats found for ${id}`);
-            return undefined;
-        } else {
-            const playlistStats = this.getPlayerPlaylistStats(id);
-            const totalPlaylistStats = this.getPlaylistCount();
-            return {
-                id: id,
-                displayName: playerRecord.displayName,
-                totalCount: playerRecord.count,
-                tronBucks: playerRecord.tronBucks,
-                playlistCount: playlistStats,
-                totalPlaylistCount: totalPlaylistStats,
-            };
+        try {
+            const playerRecord = this.getPlayerRecord(id);
+            if (!playerRecord) {
+                container.logger.error(`No stats found for ${id}`);
+                return undefined;
+            } else {
+                const playlistStats = this.getPlayerPlaylistStats(id);
+                const totalPlaylistStats = this.getPlaylistCount();
+                return {
+                    id: id,
+                    displayName: playerRecord.displayName,
+                    totalCount: playerRecord.count,
+                    tronBucks: playerRecord.tronBucks,
+                    playlistCount: playlistStats,
+                    totalPlaylistCount: totalPlaylistStats,
+                };
+            }
+        } catch (error) {
+            container.logger.error(error);
         }
     }
 
