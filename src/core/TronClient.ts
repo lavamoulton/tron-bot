@@ -4,6 +4,8 @@ import { CLIENT_OPTIONS, config } from "../config/config";
 import { Message } from "discord.js";
 import { join } from "node:path";
 import { Manager } from "./Manager";
+import sqlite3 from "sqlite3";
+import { DB } from "../db/db";
 
 require("@sapphire/plugin-logger/register");
 
@@ -33,7 +35,6 @@ export class TronClient extends SapphireClient {
     }
 
     public async login(token?: string) {
-        container.manager = new Manager();
         const loginResponse = await super.login(token);
         return loginResponse;
     }
@@ -50,5 +51,6 @@ export class TronClient extends SapphireClient {
 declare module "@sapphire/pieces" {
     interface Container {
         manager: Manager;
+        db: DB;
     }
 }

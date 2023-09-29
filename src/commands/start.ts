@@ -3,20 +3,18 @@ import type { Message } from "discord.js";
 
 // Use this to disable commands like start in production environment
 const COMMAND_ENABLED = true;
-const COMMAND_NAME = "add";
-const COMMAND_DESCRIPTION = "Add to specified playlist(s)";
-const DETAILED_DESCRIPTION =
-    "Type !add <playlist> to add to a specified playlist, or include multiple playlists separated by a space to add to more than one at the same time (e.g., !add fort tst wst). Typing '!add' will add you to both fort and tst by default";
+const COMMAND_NAME = "start";
+const COMMAND_DESCRIPTION = "Start the specified playlist(s)";
 
-export class AddCommand extends Command {
+export class StartCommand extends Command {
     public constructor(context: Command.Context, options: Command.Options) {
         super(context, {
             ...options,
             enabled: COMMAND_ENABLED,
             name: COMMAND_NAME,
             description: COMMAND_DESCRIPTION,
-            detailedDescription: DETAILED_DESCRIPTION,
             preconditions: ["Channel"],
+            requiredUserPermissions: ["BanMembers"],
         });
     }
 
@@ -54,9 +52,9 @@ export class AddCommand extends Command {
         const command = splitContent.shift();
         container.logger.debug(`Split args: ${splitContent}`);
         if (splitContent.length > 0) {
-            result = await container.manager.addToPlaylists(splitContent, author);
-        } else {
-            result = await container.manager.addToPlaylists(["fort", "tst"], author);
+            splitContent.forEach((name) => {
+                result += container.manager.forceStartPlaylist(name);
+            });
         }
         await message.channel.send(result);
     }
