@@ -342,17 +342,11 @@ export class Manager {
             }
         }
         if (result.length > 0) {
-            let finalResult =
-                `!add for pickup games here.` +
-                result +
-                `For talk, please use the <#805096704012713985> channel.`;
+            let finalResult = `!add for pickup games here.` + result;
             await this.channel.setTopic(finalResult);
             return true;
         } else {
-            let finalResult =
-                `!add for pickup games here. | ` +
-                `No players added. ` +
-                `For talk, please use the <#805096704012713985> channel.`;
+            let finalResult = `!add for pickup games here. | ` + `No players added.`;
             await this.channel.setTopic(finalResult);
             return true;
         }
