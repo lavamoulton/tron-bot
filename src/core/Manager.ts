@@ -145,6 +145,7 @@ export class Manager {
                             container.logger.error(`Did not find user ${playerID}`);
                         }
                     }
+                    this.channel.send(playlist.printList());
                 }
             }
             for (let i in this.playlists) {
