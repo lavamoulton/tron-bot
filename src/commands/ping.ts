@@ -1,9 +1,13 @@
 import { ChatInputCommand, Command } from "@sapphire/framework";
 import type { Message } from "discord.js";
 import { isMessageInstance } from "@sapphire/discord.js-utilities";
+import { config } from "../config/config";
 
 // Use this to disable commands like start in production environment
-const COMMAND_ENABLED = true;
+let COMMAND_ENABLED = false;
+if (config.ENVIRONMENT === "development") {
+    COMMAND_ENABLED = true;
+}
 const COMMAND_NAME = "ping";
 const COMMAND_DESCRIPTION = "Check latency of bot";
 
