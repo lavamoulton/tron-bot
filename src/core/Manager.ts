@@ -212,7 +212,7 @@ export class Manager {
         if (playlist.addPlayer(user, username, displayName)) {
             return playlist.printList();
         } else {
-            return `${playlist.printList()}: Refreshing add time\n`;
+            return `Refreshing add time: ${playlist.printList()}`;
         }
     }
 
