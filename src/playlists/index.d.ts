@@ -8,7 +8,8 @@ interface IPlaylist {
     draft: boolean;
     description: string;
     list: { [id: string]: IAddedUser };
-    addPlayer(user: User, displayName: string): boolean;
+    addPlayer(user: User, username: string, displayName: string): boolean;
+    addDummy(): void;
     removePlayer(user: User): boolean;
     isPlayerAdded(user: User): boolean;
     getLength(): number;

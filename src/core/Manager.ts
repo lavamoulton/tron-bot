@@ -26,7 +26,7 @@ export class Manager {
         for (const name of names) {
             const playlist = this.playlists[name];
             if (!playlist) {
-                result += `Playlist ${name} not valid.\n`;
+                // result += `Playlist ${name} not valid.\n`;
                 continue;
             }
             container.logger.debug(`Checking playlist ${name}, found ${playlist.name}`);
@@ -36,6 +36,20 @@ export class Manager {
                 result += this.addToPlaylist(playlist, user);
             }
         }
+        return result;
+    }
+
+    public forceStartPlaylist(playlistName: string): string {
+        const playlist = this.playlists[playlistName];
+        if (!playlist) {
+            container.logger.error(`Did not find playlist ${playlistName}`);
+            return `Did not find playlist ${playlistName}`;
+        }
+        while (!playlist.isFull()) {
+            playlist.addDummy();
+        }
+        container.logger.debug(playlist.printList());
+        const result = this.startPlaylist(playlist);
         return result;
     }
 
@@ -183,6 +197,7 @@ export class Manager {
 
     private addToPlaylist(playlist: IPlaylist, user: User): string {
         let displayName = user.username;
+        let username = user.username;
         if (config.GUILD_ID) {
             const guild = container.client.guilds.cache.get(config.GUILD_ID);
             if (guild) {
@@ -193,10 +208,10 @@ export class Manager {
             }
         }
 
-        if (playlist.addPlayer(user, displayName)) {
+        if (playlist.addPlayer(user, username, displayName)) {
             return playlist.printList();
         } else {
-            return `${user}, you are already added to ${playlist.name}! Refreshing your added at time for auto removal.\n`;
+            return `Refreshing add time for ${playlist.name}\n`;
         }
     }
 
@@ -240,22 +255,22 @@ export class Manager {
         let result = `----- ${playlist.name} ready to start! -----\n`;
         let playerList = this.shuffle(Object.keys(playlist.list));
         if (playlist.draft) {
-            console.log(`Player list: ${playerList}`);
             result += `${this.getDraft(playerList)}\n`;
             this.clearPlaylists(playlist);
             return result;
-        }
-        if (playlist.name === "tst") {
+        } else if (playlist.name === "TST") {
             result += `${this.getTST(playerList)}\n`;
             this.clearPlaylists(playlist);
             return result;
-        }
-        if (playlist.name === "sumobar") {
+        } else if (playlist.name === "Sumobar") {
             result += `${this.getSumobar(playerList)}\n`;
             this.clearPlaylists(playlist);
             return result;
         }
 
+        container.logger.error(
+            `Playlist ${playlist.name} could not be started - draft:${playlist.draft}, ${playlist.players}`
+        );
         return `Playlist could not be started`;
     }
 
@@ -337,7 +352,7 @@ export class Manager {
         for (const name in this.playlists) {
             const playlist = this.playlists[name];
             if (!playlist.isEmpty()) {
-                result += `| ${playlist.name}: (${playlist.getLength()} / ${
+                result += ` |${playlist.name}: (${playlist.getLength()} / ${
                     playlist.players
                 })`;
             }
@@ -346,13 +361,13 @@ export class Manager {
             let finalResult =
                 `!add for pickup games here.` +
                 result +
-                `For talk, please use the <#805096704012713985> channel.`;
+                ` | For talk, please use the <#805096704012713985> channel.`;
             await this.channel.setTopic(finalResult);
             return true;
         } else {
             let finalResult =
                 `!add for pickup games here. | ` +
-                `No players added. ` +
+                `No players added. | ` +
                 `For talk, please use the <#805096704012713985> channel.`;
             await this.channel.setTopic(finalResult);
             return true;

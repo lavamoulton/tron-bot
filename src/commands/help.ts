@@ -6,6 +6,8 @@ const COMMAND_ENABLED = true;
 const COMMAND_NAME = "help";
 const COMMAND_DESCRIPTION = "Display help menu";
 
+// ADD A HELP COMMAND TO SEND HELP MESSAGES TO A NEW USER
+
 export class AddCommand extends Command {
     public constructor(context: Command.Context, options: Command.Options) {
         super(context, {
