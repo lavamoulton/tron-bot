@@ -15,7 +15,8 @@ export class PingCommand extends Command {
             name: COMMAND_NAME,
             aliases: ["pong"],
             description: COMMAND_DESCRIPTION,
-            preconditions: ["Channel"],
+            preconditions: ["DMChannel"],
+            requiredUserPermissions: ["BanMembers"],
         });
     }
 

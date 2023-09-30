@@ -9,7 +9,7 @@ const COMMAND_DESCRIPTION =
 const DETAILED_DESCRIPTION =
     "Displays the currently added players by guild display name along with the time they added";
 
-export class WhoCommand extends Command {
+export class WhoWhenCommand extends Command {
     public constructor(context: Command.Context, options: Command.Options) {
         super(context, {
             ...options,
@@ -17,7 +17,7 @@ export class WhoCommand extends Command {
             name: COMMAND_NAME,
             description: COMMAND_DESCRIPTION,
             detailedDescription: DETAILED_DESCRIPTION,
-            preconditions: ["Channel"],
+            preconditions: ["DMChannel"],
         });
     }
 

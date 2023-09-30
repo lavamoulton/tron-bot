@@ -19,7 +19,7 @@ export class StartCommand extends Command {
             name: COMMAND_NAME,
             description: COMMAND_DESCRIPTION,
             detailedDescription: DETAILED_DESCRIPTION,
-            preconditions: ["Channel"],
+            preconditions: ["DMChannel"],
             requiredUserPermissions: ["BanMembers"],
         });
     }
