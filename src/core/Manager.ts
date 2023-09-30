@@ -13,7 +13,7 @@ export class Manager {
     options: string[];
     channel?: TextChannel;
     private rootData = getRootData();
-    private dataPath = `data\\`;
+    private dataPath = config.DATA_PATH;
 
     public constructor() {
         this.options = [];

@@ -9,7 +9,7 @@ require("@sapphire/plugin-logger/register");
 
 export class TronClient extends SapphireClient {
     private rootData = getRootData();
-    private buildPath = `dist\\build`;
+    private buildPath = config.BUILD_PATH;
 
     public constructor() {
         super(CLIENT_OPTIONS);

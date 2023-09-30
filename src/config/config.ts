@@ -24,6 +24,11 @@ let config = {
     WARN_AFTER_TIME_IN_MINUTES: process.env.WARN_AFTER_TIME_IN_MINUTES
         ? parseInt(process.env.WARN_AFTER_TIME_IN_MINUTES, 10)
         : 60,
+    DATA_PATH: process.env.DATA_PATH!,
+    BUILD_PATH: process.env.BUILD_PATH!,
+    LOGGING_LEVEL: process.env.LOGGING_LEVEL
+        ? parseInt(process.env.LOGGING_LEVEL, 10)
+        : 10,
 };
 
 const CLIENT_OPTIONS: ClientOptions = {
@@ -40,7 +45,7 @@ const CLIENT_OPTIONS: ClientOptions = {
     loadDefaultErrorListeners: true,
     loadMessageCommandListeners: true,
     logger: {
-        level: config.ENVIRONMENT === "development" ? LogLevel.Debug : LogLevel.Info,
+        level: config.LOGGING_LEVEL,
     },
 };
 
