@@ -30,7 +30,10 @@ export class Manager {
                 continue;
             }
             container.logger.debug(`Checking playlist ${name}, found ${playlist.name}`);
-            if (playlist.players - playlist.getLength() === 1) {
+            if (
+                playlist.players - playlist.getLength() === 1 &&
+                !playlist.isPlayerAdded(user)
+            ) {
                 this.addToPlaylist(playlist, user);
                 return this.startPlaylist(playlist);
             } else {
