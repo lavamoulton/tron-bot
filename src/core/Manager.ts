@@ -163,7 +163,7 @@ export class Manager {
                             container.logger.error(`Did not find user ${playerID}`);
                         }
                     }
-                    this.channel.send(playlist.printList());
+                    this.channel.send(`Autoremoving: ${playlist.printList()}`);
                 }
             }
             for (let i in this.playlists) {
@@ -257,7 +257,10 @@ export class Manager {
 
     private startPlaylist(playlist: IPlaylist): string {
         let result = `----- ${playlist.name} ready to start! -----\n`;
-        let playerList = this.shuffle(Object.keys(playlist.list));
+        let playerList: string[] = this.shuffle(Object.keys(playlist.list));
+        container.logger.debug(
+            `Starting playlist ${playlist.name} with playerlist: ${playerList}`
+        );
         if (playlist.draft) {
             result += `${this.getDraft(playerList)}\n`;
             this.clearPlaylists(playlist);
@@ -278,7 +281,7 @@ export class Manager {
         return `Playlist could not be started`;
     }
 
-    private shuffle(array: any[]) {
+    private shuffle(array: any[]): any[] {
         for (var i = array.length - 1; i > 0; i--) {
             var j = Math.floor(Math.random() * (i + 1));
             var temp = array[i];
