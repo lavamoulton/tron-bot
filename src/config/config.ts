@@ -32,7 +32,7 @@ let config = {
 };
 
 const CLIENT_OPTIONS: ClientOptions = {
-    allowedMentions: { users: [], roles: [] },
+    allowedMentions: { parse: ["roles", "users"], repliedUser: true },
     caseInsensitiveCommands: true,
     caseInsensitivePrefixes: true,
     defaultPrefix: config.PREFIX,
