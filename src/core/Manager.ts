@@ -302,10 +302,10 @@ export class Manager {
         console.log(`Non captains: ${nonCaptains}`);
         let result =
             `Team blue captain <:ddef_blue:869978902855028767>: <@${
-                userList[captain1[0]].username
+                userList[captain1[0]].id
             }>\n` +
             `Team gold captain <:ddef_gold:869978924795461662>: <@${
-                userList[captain2[0]].username
+                userList[captain2[0]].id
             }>\n` +
             `Players: ${nonCaptains}`;
         return result;
@@ -314,17 +314,17 @@ export class Manager {
     private getTST(playerList: string[], userList: { [id: string]: IAddedUser }): string {
         let result =
             `Team purple <:cycle8:736663857300242555>: <@${
-                userList[playerList[0]].username
-            }>, <@${userList[playerList[1]].username}>\n` +
+                userList[playerList[0]].id
+            }>, <@${userList[playerList[1]].id}>\n` +
             `Team orange <:cycle7:736663857606557807>: <@${
-                userList[playerList[2]].username
-            }>, <@${userList[playerList[3]].username}>\n` +
+                userList[playerList[2]].id
+            }>, <@${userList[playerList[3]].id}>\n` +
             `Team ugly <:cycle6:736663857589649468>: <@${
-                userList[playerList[4]].username
-            }>, <@${userList[playerList[5]].username}>\n` +
+                userList[playerList[4]].id
+            }>, <@${userList[playerList[5]].id}>\n` +
             `Team gold <:cycle2:736663849763209227>: <@${
-                userList[playerList[6]].username
-            }>, <@${userList[playerList[7]].username}>\n`;
+                userList[playerList[6]].id
+            }>, <@${userList[playerList[7]].id}>\n`;
         return result;
     }
 
@@ -333,7 +333,7 @@ export class Manager {
         userList: { [id: string]: IAddedUser }
     ): string {
         let map = playerList.map(
-            (player) => `<@${userList[playerList[playerList.indexOf(player)]].username}>`
+            (player) => `<@${userList[playerList[playerList.indexOf(player)]].id}>`
         );
         let first = true;
         let result = ``;
