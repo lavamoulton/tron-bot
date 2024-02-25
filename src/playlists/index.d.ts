@@ -25,5 +25,6 @@ interface IPlaylist {
 
 interface IAddedUser {
     id: string;
+    username: string;
     displayName: string;
 }
