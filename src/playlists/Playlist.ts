@@ -1,5 +1,6 @@
 import { User } from "discord.js";
 import { config } from "../config/config";
+import { container } from "@sapphire/framework";
 
 interface IPlaylist {
     name: string;
@@ -52,6 +53,9 @@ export class Playlist implements IPlaylist {
     }
 
     addPlayer(user: User, username: string, displayName: string): boolean {
+        container.logger.debug(
+            `Adding user to playlist ${this.name}: id: ${user.id} username: ${username} displayName: ${displayName}`
+        );
         if (this.isPlayerAdded(user)) {
             this.refreshPlayerAddedAt(user);
             return false;

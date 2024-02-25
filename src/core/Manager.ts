@@ -223,7 +223,7 @@ export class Manager {
         if (playlist.removePlayer(user)) {
             return [true, playlist.printList()];
         } else {
-            return [false, `${user}, you are not added to ${playlist.name}!\n`];
+            return [false, `${user.id}, you are not added to ${playlist.name}!\n`];
         }
     }
 
@@ -262,15 +262,15 @@ export class Manager {
             `Starting playlist ${playlist.name} with playerlist: ${playerList}`
         );
         if (playlist.draft) {
-            result += `${this.getDraft(playerList)}\n`;
+            result += `${this.getDraft(playerList, playlist.list)}\n`;
             this.clearPlaylists(playlist);
             return result;
         } else if (playlist.name === "TST") {
-            result += `${this.getTST(playerList)}\n`;
+            result += `${this.getTST(playerList, playlist.list)}\n`;
             this.clearPlaylists(playlist);
             return result;
         } else if (playlist.name === "Sumobar") {
-            result += `${this.getSumobar(playerList)}\n`;
+            result += `${this.getSumobar(playerList, playlist.list)}\n`;
             this.clearPlaylists(playlist);
             return result;
         }
@@ -291,31 +291,49 @@ export class Manager {
         return array;
     }
 
-    private getDraft(playerList: string[]): string {
+    private getDraft(
+        playerList: string[],
+        userList: { [id: string]: IAddedUser }
+    ): string {
         let captain1 = playerList.splice(0, 1);
         let captain2 = playerList.splice(0, 1);
         console.log(`Player list: ${playerList}`);
         let nonCaptains = playerList.map((player) => `<@${player}>`);
         console.log(`Non captains: ${nonCaptains}`);
         let result =
-            `Team blue captain <:ddef_blue:869978902855028767>: <@${captain1}>\n` +
-            `Team gold captain <:ddef_gold:869978924795461662>: <@${captain2}>\n` +
+            `Team blue captain <:ddef_blue:869978902855028767>: <@${
+                userList[captain1[0]].id
+            }>\n` +
+            `Team gold captain <:ddef_gold:869978924795461662>: <@${
+                userList[captain2[0]].id
+            }>\n` +
             `Players: ${nonCaptains}`;
         return result;
     }
 
-    private getTST(playerList: string[]): string {
+    private getTST(playerList: string[], userList: { [id: string]: IAddedUser }): string {
         let result =
-            `Team purple <:cycle8:736663857300242555>: <@${playerList[0]}>, <@${playerList[1]}>\n` +
-            `Team orange <:cycle7:736663857606557807>: <@${playerList[2]}>, <@${playerList[3]}>\n` +
-            `Team ugly <:cycle6:736663857589649468>: <@${playerList[4]}>, <@${playerList[5]}>\n` +
-            `Team gold <:cycle2:736663849763209227>: <@${playerList[6]}>, <@${playerList[7]}>\n`;
+            `Team purple <:cycle8:736663857300242555>: <@${
+                userList[playerList[0]].id
+            }>, <@${userList[playerList[1]].id}>\n` +
+            `Team orange <:cycle7:736663857606557807>: <@${
+                userList[playerList[2]].id
+            }>, <@${userList[playerList[3]].id}>\n` +
+            `Team ugly <:cycle6:736663857589649468>: <@${
+                userList[playerList[4]].id
+            }>, <@${userList[playerList[5]].id}>\n` +
+            `Team gold <:cycle2:736663849763209227>: <@${
+                userList[playerList[6]].id
+            }>, <@${userList[playerList[7]].id}>\n`;
         return result;
     }
 
-    private getSumobar(playerList: string[]): string {
+    private getSumobar(
+        playerList: string[],
+        userList: { [id: string]: IAddedUser }
+    ): string {
         let map = playerList.map(
-            (player) => `<@${playerList[playerList.indexOf(player)]}>`
+            (player) => `<@${userList[playerList[playerList.indexOf(player)]].id}>`
         );
         let first = true;
         let result = ``;
