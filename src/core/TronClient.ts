@@ -42,9 +42,7 @@ export class TronClient extends SapphireClient {
         return super.destroy();
     }
 
-    public fetchPrefix = async (message: Message) => {
-        return [config.PREFIX, ""] as readonly string[];
-    };
+    public fetchPrefix = () => "!";
 }
 
 declare module "@sapphire/pieces" {
