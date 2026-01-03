@@ -269,7 +269,7 @@ export class Manager {
             result += `${this.getTST(playerList, playlist.list)}\n`;
             this.clearPlaylists(playlist);
             return result;
-        } else if (playlist.name === "Sumobar") {
+        } else if (playlist.name === "Sumobar" || playlist.name === "Sumobar Placement") {
             result += `${this.getSumobar(playerList, playlist.list)}\n`;
             this.clearPlaylists(playlist);
             return result;
@@ -377,7 +377,7 @@ export class Manager {
         for (const name in this.playlists) {
             const playlist = this.playlists[name];
             if (!playlist.isEmpty()) {
-                result += ` |${playlist.name}: (${playlist.getLength()} / ${
+                result += ` | ${playlist.name}: (${playlist.getLength()} / ${
                     playlist.players
                 })`;
             }

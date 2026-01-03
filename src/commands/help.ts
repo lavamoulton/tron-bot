@@ -34,14 +34,27 @@ export class HelpCommand extends Command {
                 }
             }
         } else {
-            result = `----- **Help** -----\n`;
-            for (const command of container.stores.get("commands")) {
+            result = `**Join a pickup:**\n`;
+            result += `\`!add <mode>\` - or just \`!add\` to queue for fort + tst\n\n`;
+
+            result += `**Available modes:**\n`;
+            for (const playlistName in container.manager.playlists) {
+                const playlist = container.manager.playlists[playlistName];
+                result += `\`${playlist.name}\` - ${playlist.description}\n`;
+            }
+
+            result += `\n**Leave a pickup:**\n`;
+            result += `\`!remove <mode>\` - or just \`!remove\` to leave all queues\n\n`;
+
+            result += `:warning: **Pickup etiquette:** :warning:\n`;
+            result += `Adding means you're ready to play promptly and stay for the full match (**~40 min**). If you can't make it, find a sub. Repeated no-shows may result in a pickup ban.`;
+            /*for (const command of container.stores.get("commands")) {
                 if (command[0] === "help" || command[0] === "ping") {
                     continue;
                 }
                 result += `**!${command[0]}**: ${command[1].description}\n`;
             }
-            result += `\nFor more information on any command type ***!help <command>***.`;
+            result += `\nFor more information on any command type ***!help <command>***.`;*/
         }
         if (!author.dmChannel) {
             await author.createDM();

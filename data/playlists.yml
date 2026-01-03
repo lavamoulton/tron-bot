@@ -44,3 +44,8 @@ playlists:
         players: 8
         draft: false
         description: "Team Sumo 2v2v2v2. Only for new players."
+    sumobarplacement:
+        name: "Sumobar Placement"
+        players: 8
+        draft: false
+        description: "Sumobar 8 player free for all. Only for new players."
