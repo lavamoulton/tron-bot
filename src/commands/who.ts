@@ -26,6 +26,10 @@ export class WhoCommand extends Command {
         const content = message.content;
         container.logger.debug(`New message: ${content}`);
         result = container.manager.getAddedPlayers(false);
+
+        container.logger.debug(
+            `New !who message from ${author.username}: ${content} | (Result): ${result}`
+        );
         await message.channel.send(result);
     }
 }

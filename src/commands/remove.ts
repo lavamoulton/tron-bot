@@ -24,10 +24,8 @@ export class RemoveCommand extends Command {
         let result = ``;
         const { author } = message;
         const content = message.content;
-        container.logger.debug(`New message: ${content}`);
         const splitContent = content.split(" ");
         const command = splitContent.shift();
-        container.logger.debug(`Split args: ${splitContent}`);
         if (splitContent.length > 0) {
             result = await container.manager.removeFromPlaylists(
                 splitContent,
@@ -37,6 +35,9 @@ export class RemoveCommand extends Command {
         } else {
             result = container.manager.removeAllPlaylists(author);
         }
+        container.logger.debug(
+            `New !remove message from ${author.username}: ${content} | (Result): ${result}`
+        );
         await message.channel.send(result);
     }
 }

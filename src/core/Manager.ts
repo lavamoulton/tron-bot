@@ -265,7 +265,7 @@ export class Manager {
             result += `${this.getDraft(playerList, playlist.list)}\n`;
             this.clearPlaylists(playlist);
             return result;
-        } else if (playlist.name === "TST") {
+        } else if (playlist.name === "TST" || playlist.name === "TST Placement") {
             result += `${this.getTST(playerList, playlist.list)}\n`;
             this.clearPlaylists(playlist);
             return result;

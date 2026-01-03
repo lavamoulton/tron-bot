@@ -23,14 +23,24 @@ playlists:
         name: "Sumobar"
         players: 8
         draft: false
-        description: "Sumobar 8 players"
+        description: "Sumobar 8 player free for all"
+    test4:
+        name: "Test4"
+        players: 4
+        draft: true
+        description: "Use to test new game modes with 2 teams of 2 players"
     test8:
         name: "Test8"
         players: 8
         draft: true
-        description: "Use to test new game modes with 8 players"
+        description: "Use to test new game modes with 2 teams of 4 players"
     test12:
         name: "Test12"
         players: 12
         draft: true
-        description: "Use to test new game modes with 12 players"
+        description: "Use to test new game modes with 2 teams of 6 players"
+    tstplacement:
+        name: "TST Placement"
+        players: 8
+        draft: false
+        description: "Team Sumo 2v2v2v2. Only for new players."

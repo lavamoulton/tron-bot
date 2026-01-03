@@ -49,15 +49,16 @@ export class AddCommand extends Command {
         let result = ``;
         const { author } = message;
         const content = message.content;
-        container.logger.debug(`New message: ${content}`);
         const splitContent = content.split(" ");
         const command = splitContent.shift();
-        container.logger.debug(`Split args: ${splitContent}`);
         if (splitContent.length > 0) {
             result = container.manager.addToPlaylists(splitContent, author);
         } else {
             result = container.manager.addToPlaylists(["fort", "tst"], author);
         }
+        container.logger.debug(
+            `New !add message from ${author.username}: ${content} | (Result): ${result}`
+        );
         await message.channel.send(result);
     }
 }

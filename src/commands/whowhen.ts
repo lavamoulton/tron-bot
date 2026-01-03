@@ -27,6 +27,10 @@ export class WhoWhenCommand extends Command {
         const content = message.content;
         container.logger.debug(`New message: ${content}`);
         result = container.manager.getAddedPlayers(true);
+
+        container.logger.debug(
+            `New !whowhen message from ${author.username}: ${content} | (Result): ${result}`
+        );
         await message.channel.send(result);
     }
 }

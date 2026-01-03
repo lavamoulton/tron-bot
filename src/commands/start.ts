@@ -53,15 +53,17 @@ export class StartCommand extends Command {
         let result = ``;
         const { author } = message;
         const content = message.content;
-        container.logger.debug(`New message: ${content}`);
         const splitContent = content.split(" ");
         const command = splitContent.shift();
-        container.logger.debug(`Split args: ${splitContent}`);
         if (splitContent.length > 0) {
             splitContent.forEach((name) => {
                 result += container.manager.forceStartPlaylist(name);
             });
         }
+
+        container.logger.debug(
+            `New !start message from ${author.username}: ${content} | (Result): ${result}`
+        );
         await message.channel.send(result);
     }
 }

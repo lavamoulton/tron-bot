@@ -22,10 +22,8 @@ export class HelpCommand extends Command {
     public async messageRun(message: Message) {
         const { author } = message;
         const content = message.content;
-        container.logger.debug(`New message: ${content}`);
         const splitContent = content.split(" ");
         const command = splitContent.shift();
-        container.logger.debug(`Split args: ${splitContent}`);
         let result = ``;
         if (splitContent.length > 0) {
             for (const arg of splitContent) {
@@ -48,6 +46,10 @@ export class HelpCommand extends Command {
         if (!author.dmChannel) {
             await author.createDM();
         }
+
+        container.logger.debug(
+            `New !help message from ${author.username}: ${content} | (Result): ${result}`
+        );
         author.dmChannel?.send(result);
     }
 }
