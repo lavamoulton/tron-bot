@@ -52,7 +52,8 @@ export class AddCommand extends Command {
         const splitContent = content.split(" ");
         const command = splitContent.shift();
         if (splitContent.length > 0) {
-            result = container.manager.addToPlaylists(splitContent, author);
+            const uniquePlaylists = new Set<string>(splitContent);
+            result = container.manager.addToPlaylists(uniquePlaylists, author);
         } else {
             result = container.manager.addToPlaylists(["fort", "tst"], author);
         }

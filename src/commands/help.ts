@@ -39,6 +39,9 @@ export class HelpCommand extends Command {
 
             result += `**Available modes:**\n`;
             for (const playlistName in container.manager.playlists) {
+                if (playlistName.startsWith("Test")) {
+                    continue;
+                }
                 const playlist = container.manager.playlists[playlistName];
                 result += `\`${playlist.name}\` - ${playlist.description}\n`;
             }

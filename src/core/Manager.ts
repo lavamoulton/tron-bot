@@ -20,7 +20,7 @@ export class Manager {
         this.playlists = this.loadPlaylists();
     }
 
-    public addToPlaylists(names: string[], user: User): string {
+    public addToPlaylists(names: string[] | Set<string>, user: User): string {
         let result = ``;
         container.logger.debug(`${user.username} is adding to playlists: ${names}`);
         for (const name of names) {
@@ -208,6 +208,10 @@ export class Manager {
                 const guildMember = guild.members.cache.get(user.id);
                 if (guildMember) {
                     displayName = guildMember?.displayName;
+                } else {
+                    container.logger.warn(
+                        `Did not find guild member for ${user.username}`
+                    );
                 }
             }
         }
