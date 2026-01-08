@@ -39,7 +39,7 @@ export class HelpCommand extends Command {
 
             result += `**Available modes:**\n`;
             for (const playlistName in container.manager.playlists) {
-                if (playlistName.includes("test")) {
+                if (playlistName.toLowerCase().includes("test")) {
                     continue;
                 }
                 const playlist = container.manager.playlists[playlistName];

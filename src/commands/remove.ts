@@ -27,8 +27,9 @@ export class RemoveCommand extends Command {
         const splitContent = content.split(" ");
         const command = splitContent.shift();
         if (splitContent.length > 0) {
+            const uniquePlaylists = new Set<string>(splitContent);
             result = await container.manager.removeFromPlaylists(
-                splitContent,
+                uniquePlaylists,
                 author,
                 false
             );

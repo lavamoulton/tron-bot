@@ -61,7 +61,11 @@ export class Manager {
         return this.removeFromPlaylists(this.options, user, true);
     }
 
-    public removeFromPlaylists(names: string[], user: User, condensed: boolean): string {
+    public removeFromPlaylists(
+        names: string[] | Set<string>,
+        user: User,
+        condensed: boolean
+    ): string {
         let result = ``;
         let check = false;
         container.logger.debug(
