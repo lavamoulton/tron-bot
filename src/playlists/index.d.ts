@@ -7,6 +7,7 @@ interface IPlaylist {
     players: number;
     draft: boolean;
     description: string;
+    aliases: string[];
     list: { [id: string]: IAddedUser };
     addPlayer(user: User, username: string, displayName: string): boolean;
     addDummy(): void;

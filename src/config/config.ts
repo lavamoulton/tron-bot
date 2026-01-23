@@ -1,4 +1,3 @@
-import { LogLevel } from "@sapphire/framework";
 import { ClientOptions, GatewayIntentBits } from "discord.js";
 import "dotenv/config";
 

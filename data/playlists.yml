@@ -24,6 +24,11 @@ playlists:
         players: 8
         draft: false
         description: "Sumobar 8 player free for all"
+    4tf:
+        name: "4TF"
+        players: 16
+        draft: true
+        description: "4 Team Fortress 4v4v4v4"
     test4:
         name: "Test4"
         players: 4

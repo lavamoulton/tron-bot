@@ -42,6 +42,7 @@ export class Playlist implements IPlaylist {
     players: number;
     draft: boolean;
     description: string;
+    aliases: string[] = [];
     list: { [id: string]: IAddedUser };
 
     constructor(name: string, players: number, draft: boolean, description: string) {
@@ -54,7 +55,7 @@ export class Playlist implements IPlaylist {
 
     addPlayer(user: User, username: string, displayName: string): boolean {
         container.logger.debug(
-            `Adding user to playlist ${this.name}: id: ${user.id} username: ${username} displayName: ${displayName}`
+            `Adding user to playlist ${this.name}: id: ${user.id} username: ${username} displayName: ${displayName}`,
         );
         if (this.isPlayerAdded(user)) {
             this.refreshPlayerAddedAt(user);

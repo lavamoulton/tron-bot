@@ -58,7 +58,7 @@ export class AddCommand extends Command {
             result = container.manager.addToPlaylists(["fort", "tst"], author);
         }
         container.logger.debug(
-            `New !add message from ${author.username}: ${content} | (Result): ${result}`
+            `New !add message from ${author.username}: ${content} | (Result): ${result}`,
         );
         await message.channel.send(result);
     }

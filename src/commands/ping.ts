@@ -23,7 +23,9 @@ export class PingCommand extends Command {
 
     public override registerApplicationCommands(registry: ChatInputCommand.Registry) {
         registry.registerChatInputCommand((builder) =>
-            builder.setName("ping").setDescription("Ping bot to see if it is still alive")
+            builder
+                .setName("ping")
+                .setDescription("Ping bot to see if it is still alive"),
         );
     }
 
@@ -38,7 +40,7 @@ export class PingCommand extends Command {
             const diff = msg.createdTimestamp - interaction.createdTimestamp;
             const ping = Math.round(this.container.client.ws.ping);
             return interaction.editReply(
-                `Pong 🏓! (Round trip took: ${diff}ms. Heartbeat: ${ping}ms.)`
+                `Pong 🏓! (Round trip took: ${diff}ms. Heartbeat: ${ping}ms.)`,
             );
         }
 
@@ -49,7 +51,7 @@ export class PingCommand extends Command {
         const msg = await message.channel.send("Ping?");
 
         const content = `Pong test. Bot latency ${Math.round(
-            this.container.client.ws.ping
+            this.container.client.ws.ping,
         )}ms. API latency ${msg.createdTimestamp - message.createdTimestamp}ms.`;
 
         return msg.edit(content);
