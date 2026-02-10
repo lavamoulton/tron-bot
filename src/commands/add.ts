@@ -1,5 +1,6 @@
 import { Command, container } from "@sapphire/framework";
 import type { Message } from "discord.js";
+import { pushDiscordAddToQueueApi } from "../core/rclQueueApi";
 
 // Use this to disable commands like start in production environment
 const COMMAND_ENABLED = true;
@@ -50,13 +51,32 @@ export class AddCommand extends Command {
         const { author } = message;
         const content = message.content;
         const splitContent = content.split(" ");
-        const command = splitContent.shift();
+        splitContent.shift();
+        const requestedPlaylists =
+            splitContent.length > 0 ? [...new Set<string>(splitContent)] : ["fort", "tst"];
         if (splitContent.length > 0) {
-            const uniquePlaylists = new Set<string>(splitContent);
+            const uniquePlaylists = new Set<string>(requestedPlaylists);
             result = container.manager.addToPlaylists(uniquePlaylists, author);
         } else {
             result = container.manager.addToPlaylists(["fort", "tst"], author);
         }
+
+        const queueResult = await pushDiscordAddToQueueApi(
+            requestedPlaylists,
+            author.id,
+            author.username
+        );
+
+        if (queueResult.attempted > 0) {
+            if (queueResult.failedModes.length === 0) {
+                result += `\nQueue API synced: ${queueResult.successfulModes.join(", ")}`;
+            } else {
+                result += `\nQueue API partial sync: ${queueResult.successfulModes.join(
+                    ", "
+                )} (failed: ${queueResult.failedModes.map((f) => f.mode).join(", ")})`;
+            }
+        }
+
         container.logger.debug(
             `New !add message from ${author.username}: ${content} | (Result): ${result}`,
         );
