@@ -28,6 +28,8 @@ let config = {
     LOGGING_LEVEL: process.env.LOGGING_LEVEL
         ? parseInt(process.env.LOGGING_LEVEL, 10)
         : 10,
+    RCL_API_URL: process.env.RCL_API_URL,
+    RCL_API_KEY: process.env.RCL_API_KEY,
 };
 
 const CLIENT_OPTIONS: ClientOptions = {

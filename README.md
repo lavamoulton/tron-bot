@@ -26,6 +26,23 @@ Alternatively, you can use a process manager like [PM2](https://pm2.keymetrics.i
 
 The source is now using the Sapphire framework. Documentation can be found [here](https://www.sapphirejs.dev/)
 
+### RCL Queue API integration
+
+The `!add` command can push a queue join to the RCL dashboard API.
+
+- Configure:
+  - `RCL_API_URL` (example: `https://retrocyclesleague.com`)
+  - `RCL_API_KEY` (bot API key shared by dashboard owner)
+- Payload sent to `/api/queue/bot/join` includes:
+  - `source: "discord:{user_id}"`
+  - `username: "{discord_username}"`
+  - `playerName: "{discord_username}"` (compatibility field used by current dashboard API)
+
+Only supported playlists are forwarded to queue modes:
+- `fort` -> `fort`
+- `tst`, `tstplacement` -> `tst`
+- `sumo`, `sumobar`, `sumobarplacement` -> `sumo`
+
 ### Auto removal
 
 Auto removal from playlists has a default setting of 60 minutes, and warning after 50 minutes. This can be overwritten by setting environment variables `EXPIRE_AFTER_TIME_IN_MINUES` and `WARN_AFTER_TIME_IN_MINUES` respectively (i.e. `export EXPIRE_AFTER_TIME_IN_MINUES=30`) or adjusting your `.env`.
