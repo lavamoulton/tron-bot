@@ -645,6 +645,7 @@ export async function askDashboardAgent(options: {
     mode?: DashboardAgentMode;
     discordRoleIds?: string[];
     linearWriteAuthorized?: boolean;
+    attachments?: Array<{ path: string; name: string; contentType: string }>;
 }): Promise<DashboardAgentAskResult> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), AGENT_ASK_TIMEOUT_MS);
@@ -657,6 +658,7 @@ export async function askDashboardAgent(options: {
                 mode: options.mode || "ask",
                 discordRoleIds: options.discordRoleIds || [],
                 linearWriteAuthorized: options.linearWriteAuthorized === true,
+                attachments: options.attachments || [],
             },
             signal: controller.signal,
             dispatcher: AGENT_ASK_DISPATCHER,
