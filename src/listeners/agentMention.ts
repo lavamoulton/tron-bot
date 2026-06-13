@@ -77,6 +77,22 @@ function canUseAgentWriteMode(member: NonNullable<Message["member"]>): boolean {
   return roleIds.some((roleId) => allowed.has(roleId))
 }
 
+function isGameplayStatsQuestion(text: string): boolean {
+  return /gameplay|my stats|analyze my|how (did|have) i (play|done|perform)|this week|week start|last \d+ days|match history|weekly|performance|my tst|my fort|my sumobar|elo trend|k\/d/i.test(
+    text,
+  )
+}
+
+function inferSinceFromQuestion(question: string): string {
+  const text = question.toLowerCase()
+  if (/week start|this week|since monday|from monday/.test(text)) return "week"
+  if (/this month|month start/.test(text)) return "month"
+  const days = text.match(/last (\d+) days?/)
+  if (days) return `${days[1]}d`
+  if (/today|last 24|past day/.test(text)) return "1d"
+  return "week"
+}
+
 function buildDiscordAgentContextBlock(
   member: NonNullable<Message["member"]>,
   mode: DashboardAgentMode,
@@ -106,6 +122,22 @@ function buildDiscordAgentContextBlock(
   }
 
   return lines.join("\n")
+}
+
+function buildGameplayStatsFastPathBlock(
+  member: NonNullable<Message["member"]>,
+  question: string,
+): string {
+  const since = inferSinceFromQuestion(question)
+  const username = encodeURIComponent(member.user.username)
+  return [
+    "Player stats — mandatory fast path (do this before any codebase search):",
+    "1. Active dashboard port: grep server line in /etc/nginx/rcl-upstreams/rcl-dashboard-upstream-active.conf",
+    "2. QUEUE_API_KEY: /data/rcl/rcl-dashboard/.env.local",
+    `3. ONE curl: GET /api/queue/bot/discord/gameplay-summary?discordUserId=${member.id}&discordUsername=${username}&since=${since}`,
+    "4. Analyze JSON (periodTotals, tst.period, hints) and reply — no armanelgtron HTML scraping or ad-hoc psql.",
+    "5. Season-wide (not period): GET /api/queue/bot/discord/profile with same discord params.",
+  ].join("\n")
 }
 
 function buildAgentReplyInstructions(mode: DashboardAgentMode): string {
@@ -198,14 +230,18 @@ export class AgentMentionListener extends Listener<typeof Events.MessageCreate> 
 
     const existingSessionId = getSessionForUser(message.author.id)
     const contextBlock = buildDiscordAgentContextBlock(message.member, mode)
-    const prompt = [
-      contextBlock,
+    const promptParts = [contextBlock]
+    if (isGameplayStatsQuestion(question)) {
+      promptParts.push("", buildGameplayStatsFastPathBlock(message.member, question))
+    }
+    promptParts.push(
       "",
       `Question from Discord user ${message.author.username} (${message.author.id}):`,
       question,
       "",
       buildAgentReplyInstructions(mode),
-    ].join("\n")
+    )
+    const prompt = promptParts.join("\n")
 
     const channel = message.channel
     if (!channel.isTextBased() || channel.isDMBased()) return
@@ -228,6 +264,13 @@ export class AgentMentionListener extends Listener<typeof Events.MessageCreate> 
       }
     } catch (error) {
       this.container.logger.warn(`Agent ask failed for ${message.author.id}: ${error}`)
+      const msg = String(error)
+      if (msg.includes("timed out") || msg.includes("AbortError")) {
+        await message.reply(
+          "That question took too long (over ~15 minutes). Try a narrower ask — e.g. one match, one mode, or last 3 days — and mention me again.",
+        )
+        return
+      }
       await message.reply("Sorry, the dashboard agent failed to answer that question. Try again in a minute.")
     }
   }
