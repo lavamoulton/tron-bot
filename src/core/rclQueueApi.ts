@@ -166,7 +166,8 @@ export type DiscordPlayerProfileResult = {
     discordUserId: string;
     playerName: string;
     verificationState: "unverified" | "verified";
-    profileUrl: string;
+    profileAvailable: boolean;
+    profileUrl: string | null;
     identities: {
         primaryLoginId: string | null;
         username: string | null;
@@ -224,7 +225,7 @@ export type PlayerDirectorySnapshot = {
     entries: PlayerDirectoryEntry[];
 };
 
-export type DashboardAgentMode = "ask" | "agent";
+export type DashboardAgentMode = "ask" | "agent" | "linear";
 
 export type DashboardAgentAskResult = {
     ok: boolean;
@@ -235,7 +236,7 @@ export type DashboardAgentAskResult = {
 
 const VALID_SCOPES: QueueScope[] = ["open", "beginner", "pro"];
 const API_HOST_HEADER_VALUE = String(process.env.RCL_API_HOST || "").trim();
-const AGENT_ASK_TIMEOUT_MS = 600_000;
+export const AGENT_ASK_TIMEOUT_MS = 900_000;
 const AGENT_ASK_DISPATCHER = createAgentAskDispatcher();
 
 function createAgentAskDispatcher(): unknown {
@@ -643,6 +644,7 @@ export async function askDashboardAgent(options: {
     sessionId?: string;
     mode?: DashboardAgentMode;
     discordRoleIds?: string[];
+    linearWriteAuthorized?: boolean;
 }): Promise<DashboardAgentAskResult> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), AGENT_ASK_TIMEOUT_MS);
@@ -654,6 +656,7 @@ export async function askDashboardAgent(options: {
                 sessionId: options.sessionId,
                 mode: options.mode || "ask",
                 discordRoleIds: options.discordRoleIds || [],
+                linearWriteAuthorized: options.linearWriteAuthorized === true,
             },
             signal: controller.signal,
             dispatcher: AGENT_ASK_DISPATCHER,
