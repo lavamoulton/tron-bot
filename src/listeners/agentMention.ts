@@ -140,6 +140,21 @@ function buildGameplayStatsFastPathBlock(
   ].join("\n")
 }
 
+function isProjectManagementQuestion(text: string): boolean {
+  return /linear|backlog|sprint|milestone|roadmap priority|what('s| is) next|in progress|blocked|blocker|open issues?|create (an? )?(issue|ticket|task)|file (an? )?(issue|ticket|bug)|project status|who('s| is) working on|priorit(y|ies)|assignee|ticket|task board|kanban/i.test(
+    text,
+  )
+}
+
+function buildLinearProjectManagementBlock(): string {
+  return [
+    "Project management — RCL uses Linear (mandatory):",
+    "• Use Linear MCP tools (list_issues, get_issue, create_issue, update_issue, list_projects, etc.) — not GitHub Issues or ROADMAP.md alone.",
+    "• ROADMAP.md = vision; DEVLOG.md = changelog; Linear = actionable backlog and status.",
+    "• Query Linear first, then answer or act. See docs/LINEAR_MCP.md on the dashboard host.",
+  ].join("\n")
+}
+
 function buildAgentReplyInstructions(mode: DashboardAgentMode): string {
   if (mode === "agent") {
     return [
@@ -233,6 +248,9 @@ export class AgentMentionListener extends Listener<typeof Events.MessageCreate> 
     const promptParts = [contextBlock]
     if (isGameplayStatsQuestion(question)) {
       promptParts.push("", buildGameplayStatsFastPathBlock(message.member, question))
+    }
+    if (isProjectManagementQuestion(question)) {
+      promptParts.push("", buildLinearProjectManagementBlock())
     }
     promptParts.push(
       "",
