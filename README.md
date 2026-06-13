@@ -33,10 +33,14 @@ The `!add` command can push a queue join to the RCL dashboard API.
 - Configure:
   - `RCL_API_URL` (example: `https://retrocyclesleague.com`)
   - `RCL_API_KEY` (bot API key shared by dashboard owner)
+  - `QUEUE_CHANNEL_POLICIES` (`channelId:scope` CSV, e.g. `123:open,456:beginner,789:pro`)
 - Payload sent to `/api/queue/bot/join` includes:
   - `source: "discord:{user_id}"`
   - `username: "{discord_username}"`
   - `playerName: "{discord_username}"` (compatibility field used by current dashboard API)
+  - `scope: "open" | "beginner" | "pro"` (resolved from channel policy or panel setup)
+
+Queue scopes are server-enforced by the dashboard API using cached rating data; the bot does not perform live NELG rating lookups per command.
 
 Only supported playlists are forwarded to queue modes:
 - `fort` -> `fort`
