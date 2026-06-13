@@ -58,7 +58,14 @@ function parseDiscordAgentModeTrigger(text: string): {
 }
 
 function memberDiscordRoleIds(member: NonNullable<Message["member"]>): string[] {
-  return [...member.roles.cache.keys()]
+  return [...member.roles.cache.keys()].filter((roleId) => roleId !== member.guild.id)
+}
+
+function memberDiscordRoles(member: NonNullable<Message["member"]>): Array<{ id: string; name: string }> {
+  return [...member.roles.cache.values()]
+    .filter((role) => role.id !== member.guild.id)
+    .map((role) => ({ id: role.id, name: role.name }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 }
 
 function canUseAgentWriteMode(member: NonNullable<Message["member"]>): boolean {
@@ -68,6 +75,54 @@ function canUseAgentWriteMode(member: NonNullable<Message["member"]>): boolean {
     ...config.AGENT_WRITE_CONFIRM_ROLE_IDS,
   ])
   return roleIds.some((roleId) => allowed.has(roleId))
+}
+
+function buildDiscordAgentContextBlock(
+  member: NonNullable<Message["member"]>,
+  mode: DashboardAgentMode,
+): string {
+  const roles = memberDiscordRoles(member)
+  const roleNames = roles.map((role) => role.name).join(", ") || "(none)"
+  const roleIds = roles.map((role) => role.id).join(", ") || "(none)"
+  const writeAuthorized = canUseAgentWriteMode(member)
+  const modeLine =
+    mode === "agent"
+      ? "agent (write — file edits, shell, deploy allowed)"
+      : "ask (read-only Q&A)"
+
+  const lines = [
+    "Discord session context (pre-validated at the bot gate — do not re-check permissions):",
+    `• Discord user: ${member.user.username} (${member.id})`,
+    `• Discord roles: ${roleNames}`,
+    `• Role IDs: ${roleIds}`,
+    `• Agent mode: ${modeLine}`,
+    `• /agent write access granted: ${writeAuthorized ? "yes" : "no"}`,
+  ]
+
+  if (mode === "agent" && writeAuthorized) {
+    lines.push(
+      "• You have full agent (write) access for this request. Execute it — edit files, run commands, deploy if needed. Do not refuse for lack of permissions.",
+    )
+  }
+
+  return lines.join("\n")
+}
+
+function buildAgentReplyInstructions(mode: DashboardAgentMode): string {
+  if (mode === "agent") {
+    return [
+      "Reply in Discord-friendly markdown after completing the work.",
+      "Summarize what you changed or ran; omit tool narration and wrappers like \"Reply for <user>\".",
+      "",
+      DISCORD_FORMAT_RULES,
+    ].join("\n")
+  }
+
+  return [
+    "Reply directly in Discord-friendly markdown. Do not include planning, analysis, tool narration, or wrappers like \"Reply for <user>\" — only the final answer the user should see.",
+    "",
+    DISCORD_FORMAT_RULES,
+  ].join("\n")
 }
 
 function getSessionForUser(userId: string): string | undefined {
@@ -142,13 +197,14 @@ export class AgentMentionListener extends Listener<typeof Events.MessageCreate> 
     }
 
     const existingSessionId = getSessionForUser(message.author.id)
+    const contextBlock = buildDiscordAgentContextBlock(message.member, mode)
     const prompt = [
+      contextBlock,
+      "",
       `Question from Discord user ${message.author.username} (${message.author.id}):`,
       question,
       "",
-      "Reply directly in Discord-friendly markdown. Do not include planning, analysis, tool narration, or wrappers like \"Reply for <user>\" — only the final answer the user should see.",
-      "",
-      DISCORD_FORMAT_RULES,
+      buildAgentReplyInstructions(mode),
     ].join("\n")
 
     const channel = message.channel
