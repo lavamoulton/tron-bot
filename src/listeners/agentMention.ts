@@ -5,6 +5,12 @@ import {
   cleanupDownloadedDiscordAgentAttachments,
   downloadDiscordAgentAttachments,
 } from "../core/discordAgentAttachments"
+import {
+  buildCaptureContextBlock,
+  buildTriageInstructionBlock,
+  captureChannelContext,
+  parseAgentDirectives,
+} from "../core/discordContextCapture"
 import { askDashboardAgent, AGENT_ASK_TIMEOUT_MS, type DashboardAgentMode } from "../core/rclQueueApi"
 import { config } from "../config/config"
 
@@ -292,10 +298,35 @@ export class AgentMentionListener extends Listener<typeof Events.MessageCreate> 
       return
     }
 
-    const { mode: parsedMode, message: question } = parseDiscordAgentModeTrigger(rawQuestion || "")
-    const effectiveQuestion =
-      question ||
-      "(No text — user sent image attachment(s) only. Use the Read tool on the attached paths and respond to what you see.)"
+    const { mode: parsedMode, message: triggerText } = parseDiscordAgentModeTrigger(rawQuestion || "")
+    const directives = parseAgentDirectives(triggerText)
+
+    const channel = message.channel
+    if (!channel.isTextBased() || channel.isDMBased()) {
+      await cleanupDownloadedDiscordAgentAttachments(attachments)
+      return
+    }
+
+    let effectiveQuestion = directives.residual
+    if (!effectiveQuestion) {
+      if (directives.triage) {
+        effectiveQuestion = "Triage the captured Discord conversation below."
+      } else if (directives.capture) {
+        effectiveQuestion =
+          "Read and reason over the captured Discord conversation below, then summarize the key points and anything notable."
+      } else if (attachments.length) {
+        effectiveQuestion =
+          "(No text — user sent image attachment(s) only. Use the Read tool on the attached paths and respond to what you see.)"
+      }
+    }
+    if (!effectiveQuestion) {
+      await cleanupDownloadedDiscordAgentAttachments(attachments)
+      await message.reply(
+        "Mention me with a question, or pull channel context with e.g. `/agent /capture days=14 /triage`.",
+      )
+      return
+    }
+
     if (parsedMode === "agent" && !canUseAgentWriteMode(message.member)) {
       await cleanupDownloadedDiscordAgentAttachments(attachments)
       await message.reply(
@@ -309,14 +340,42 @@ export class AgentMentionListener extends Listener<typeof Events.MessageCreate> 
       effectiveQuestion,
       parsedMode,
     )
+
+    let captureBlock: string | null = null
+    if (directives.capture) {
+      try {
+        void channel.sendTyping().catch(() => undefined)
+        const captured = await captureChannelContext(channel, directives.capture, message.id)
+        captureBlock = buildCaptureContextBlock(captured, directives.capture)
+        this.container.logger.info(
+          `Agent capture user=${message.author.id} msg=${message.id} window=${directives.capture.windowLabel} messages=${captured.messageCount} truncated=${captured.truncated}`,
+        )
+      } catch (error) {
+        this.container.logger.warn(
+          `Agent capture failed user=${message.author.id} msg=${message.id}: ${error}`,
+        )
+        await cleanupDownloadedDiscordAgentAttachments(attachments)
+        await message.reply(
+          "I couldn't read this channel's history (I may be missing the **Read Message History** permission here, or it timed out). Grant it and try again.",
+        )
+        return
+      }
+    }
+
     const existingSessionId = getSessionForUser(message.author.id, mode)
     const contextBlock = buildDiscordAgentContextBlock(message.member, mode)
     const promptParts = [contextBlock]
+    if (captureBlock) {
+      promptParts.push("", captureBlock)
+    }
     if (isGameplayStatsQuestion(effectiveQuestion)) {
       promptParts.push("", buildGameplayStatsFastPathBlock(message.member, effectiveQuestion))
     }
-    if (isProjectManagementQuestion(effectiveQuestion)) {
+    if (isProjectManagementQuestion(effectiveQuestion) || (directives.triage && linearWriteAuthorized)) {
       promptParts.push("", buildLinearProjectManagementBlock(mode))
+    }
+    if (directives.triage) {
+      promptParts.push("", buildTriageInstructionBlock(linearWriteAuthorized))
     }
     promptParts.push(
       "",
@@ -326,9 +385,6 @@ export class AgentMentionListener extends Listener<typeof Events.MessageCreate> 
       buildAgentReplyInstructions(mode),
     )
     const prompt = promptParts.join("\n")
-
-    const channel = message.channel
-    if (!channel.isTextBased() || channel.isDMBased()) return
 
     const askStartedAt = Date.now()
     const questionPreview =
