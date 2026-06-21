@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { GuildChannel, TextChannel, User } from "discord.js";
 import { config } from "../config/config";
 import { isGuildBasedChannel } from "@sapphire/discord.js-utilities";
+import { getQueueReactionPanels } from "./queueReactionPanel";
 
 export class Manager {
     playlists: IPlaylists;
@@ -18,6 +19,11 @@ export class Manager {
     public constructor() {
         this.options = [];
         this.playlists = this.loadPlaylists();
+    }
+
+    private resolveOutputChannelId(): string | undefined {
+        if (config.OUTPUT_CHANNEL) return config.OUTPUT_CHANNEL;
+        return getQueueReactionPanels()[0]?.channelId;
     }
 
     public addToPlaylists(names: string[] | Set<string>, user: User): string {
@@ -121,7 +127,12 @@ export class Manager {
 
     public async warnAndExpirePlayers(): Promise<void> {
         if (!this.channel) {
-            const channel = container.client.channels.cache.get(config.OUTPUT_CHANNEL!);
+            const outputChannelId = this.resolveOutputChannelId();
+            if (!outputChannelId) {
+                container.logger.debug(`No output channel configured for autoremoval`);
+                return;
+            }
+            const channel = container.client.channels.cache.get(outputChannelId);
             if (channel) {
                 this.channel = channel as TextChannel;
                 container.logger.info(`Setting output channel for autoremoval`);
@@ -264,7 +275,8 @@ export class Manager {
     }
 
     private startPlaylist(playlist: IPlaylist): string {
-        let result = `----- ${playlist.name} ready to start! -----\n`;
+        const isTst = playlist.name === "TST" || playlist.name === "TST Placement";
+        let result = isTst ? `▦ TST READY ▦\n` : `----- ${playlist.name} ready to start! -----\n`;
         let playerList: string[] = this.shuffle(Object.keys(playlist.list));
         container.logger.debug(
             `Starting playlist ${playlist.name} with playerlist: ${playerList}`
@@ -273,7 +285,7 @@ export class Manager {
             result += `${this.getDraft(playerList, playlist.list)}\n`;
             this.clearPlaylists(playlist);
             return result;
-        } else if (playlist.name === "TST" || playlist.name === "TST Placement") {
+        } else if (isTst) {
             result += `${this.getTST(playerList, playlist.list)}\n`;
             this.clearPlaylists(playlist);
             return result;
@@ -321,18 +333,18 @@ export class Manager {
 
     private getTST(playerList: string[], userList: { [id: string]: IAddedUser }): string {
         let result =
-            `Team purple <:cycle8:736663857300242555>: <@${
+            `<:cycle8:736663857300242555> <@${
                 userList[playerList[0]].id
-            }>, <@${userList[playerList[1]].id}>\n` +
-            `Team orange <:cycle7:736663857606557807>: <@${
+            }> + <@${userList[playerList[1]].id}>\n` +
+            `<:cycle7:736663857606557807> <@${
                 userList[playerList[2]].id
-            }>, <@${userList[playerList[3]].id}>\n` +
-            `Team ugly <:cycle6:736663857589649468>: <@${
+            }> + <@${userList[playerList[3]].id}>\n` +
+            `<:cycle6:736663857589649468> <@${
                 userList[playerList[4]].id
-            }>, <@${userList[playerList[5]].id}>\n` +
-            `Team gold <:cycle2:736663849763209227>: <@${
+            }> + <@${userList[playerList[5]].id}>\n` +
+            `<:tstgold:736663849763209227> <@${
                 userList[playerList[6]].id
-            }>, <@${userList[playerList[7]].id}>\n`;
+            }> + <@${userList[playerList[7]].id}>\n`;
         return result;
     }
 
@@ -372,7 +384,12 @@ export class Manager {
 
     public async updateTopic(): Promise<boolean> {
         if (!this.channel) {
-            const channel = container.client.channels.cache.get(config.OUTPUT_CHANNEL!);
+            const outputChannelId = this.resolveOutputChannelId();
+            if (!outputChannelId) {
+                container.logger.debug(`No output channel configured for topic updates`);
+                return false;
+            }
+            const channel = container.client.channels.cache.get(outputChannelId);
             if (channel) {
                 this.channel = channel as TextChannel;
                 container.logger.info(`Setting output channel`);

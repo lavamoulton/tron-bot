@@ -6,7 +6,16 @@ import { config } from "../config/config";
 const COMMAND_ENABLED = true;
 const COMMAND_NAME = "pull";
 const COMMAND_DESCRIPTION = "Force remove from all playlists";
-const DETAILED_DESCRIPTION = "Type !pull <id> to force removal from all playlists.";
+const DETAILED_DESCRIPTION =
+    "Type !pull <discordId|@mention> to force removal from all playlists.";
+
+function parseDiscordUserId(token: string | undefined): string | null {
+    if (!token) return null;
+    const trimmed = token.trim();
+    const mentionMatch = trimmed.match(/^<@!?(\d+)>$/);
+    const normalized = mentionMatch ? mentionMatch[1] : trimmed;
+    return /^\d{17,20}$/.test(normalized) ? normalized : null;
+}
 
 export class PullCommand extends Command {
     public constructor(context: Command.Context, options: Command.Options) {
@@ -24,11 +33,22 @@ export class PullCommand extends Command {
         let result = ``;
         const { author } = message;
         const content = message.content;
-        const splitContent = content.split(" ");
-        const command = splitContent.shift();
-        if (splitContent.length > 0) {
-            const removedUser = await container.client.users.fetch(splitContent[0]);
-            result = container.manager.removeAllPlaylists(removedUser);
+        const splitContent = content
+            .split(" ")
+            .map((token) => token.trim())
+            .filter((token) => token.length > 0);
+        splitContent.shift();
+
+        const targetDiscordId = parseDiscordUserId(splitContent.shift());
+        if (!targetDiscordId) {
+            result = "Usage: !pull <discordId|@mention>";
+        } else {
+            try {
+                const removedUser = await container.client.users.fetch(targetDiscordId);
+                result = container.manager.removeAllPlaylists(removedUser);
+            } catch {
+                result = `Could not find Discord user \`${targetDiscordId}\`.`;
+            }
         }
         container.logger.debug(
             `New !pull message from ${author.username}: ${content} | (Result): ${result}`,
