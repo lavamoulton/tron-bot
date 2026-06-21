@@ -5,9 +5,18 @@ type PendingPopDm = {
     id: string;
     mode: string;
     targetServer: string;
+    targetServerName?: string | null;
     poppedAt: string;
     playerNames: string[];
     discordUserIds: string[];
+    playerTargets?: Array<{
+        playerName: string;
+        discordUserId: string;
+        targetServer: string;
+        targetServerName?: string | null;
+        groupTargetServer?: string;
+        groupTargetServerName?: string | null;
+    }>;
 };
 
 const POLL_INTERVAL_MS = 8_000;
@@ -16,11 +25,20 @@ function normalizeApiUrl(url: string): string {
     return url.replace(/\/+$/, "");
 }
 
-function formatPopDmMessage(mode: string, targetServer: string): string {
+function formatPopDmMessage(
+    discordId: string,
+    mode: string,
+    targetServer: string,
+    targetServerName?: string | null
+): string {
     const modeLabel = mode.toUpperCase();
+    const connect = targetServer.trim();
+    const label = String(targetServerName || "").trim();
+    const serverLines =
+        label && label !== connect ? `${label}\n\`${connect}\`` : connect ? `\`${connect}\`` : "see pickup channel";
     return (
-        `:rotating_light: **RCL queue pop – ${modeLabel}**\n\n` +
-        `Your game is ready. Join the server:\n**\`${targetServer}\`**\n\n` +
+        `<@${discordId}> :rotating_light: **RCL queue pop – ${modeLabel}**\n\n` +
+        `Your game is ready. Join the server:\n**${serverLines}**\n\n` +
         `See you on the grid.`
     );
 }
@@ -75,15 +93,30 @@ export class PopDmSync {
         const ackedPopIds: string[] = [];
 
         for (const pop of pops) {
-            const discordIds = Array.isArray(pop.discordUserIds)
-                ? (pop.discordUserIds as unknown[]).filter((id): id is string => typeof id === "string")
-                : [];
-            const message = formatPopDmMessage(pop.mode, pop.targetServer ?? "");
+            const playerTargets =
+                Array.isArray(pop.playerTargets) && pop.playerTargets.length > 0
+                    ? pop.playerTargets
+                    : (Array.isArray(pop.discordUserIds) ? pop.discordUserIds : [])
+                          .filter((id): id is string => typeof id === "string")
+                          .map((discordId) => ({
+                              discordUserId: discordId,
+                              playerName: "",
+                              targetServer: pop.targetServer ?? "",
+                              targetServerName: pop.targetServerName,
+                          }));
 
-            for (const discordId of discordIds) {
+            for (const target of playerTargets) {
+                const discordId = target.discordUserId;
+                if (!discordId) continue;
+                const message = formatPopDmMessage(
+                    discordId,
+                    pop.mode,
+                    target.targetServer ?? pop.targetServer ?? "",
+                    target.targetServerName ?? pop.targetServerName
+                );
                 try {
                     const user = await container.client.users.fetch(discordId);
-                    await user.send(message);
+                    await user.send({ content: message, allowedMentions: { users: [discordId] } });
                     container.logger.info(`Sent pop DM to ${discordId} for ${pop.mode} pop ${pop.id}`);
                 } catch (error) {
                     container.logger.warn(`Failed to send pop DM to ${discordId}: ${error}`);

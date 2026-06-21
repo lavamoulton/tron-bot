@@ -119,6 +119,30 @@ export type QueuePopResult = {
     completedAt: string | null;
 };
 
+export type QueueJoinEventResult = {
+    id: string;
+    mode: string;
+    scope: QueueScope;
+    playerName: string;
+    source: string;
+    currentCount: number;
+    requiredCount: number;
+    createdAt: string;
+    discordNotifiedAt: string | null;
+};
+
+export type QueueLeaveEventResult = {
+    id: string;
+    mode: string;
+    scope: QueueScope;
+    playerName: string;
+    source: string;
+    currentCount: number;
+    requiredCount: number;
+    createdAt: string;
+    discordNotifiedAt: string | null;
+};
+
 export type QueueModeStateByScope = Record<QueueScope, string[]>;
 
 export type QueueScopeEligibilityState = {
@@ -232,6 +256,32 @@ export type DashboardAgentAskResult = {
     answer: string;
     sessionId: string;
     durationMs: number;
+};
+
+export type LiveServerRecord = {
+    id: string;
+    host: string;
+    port: number;
+    connect: string;
+    namePlain: string;
+    players: number;
+    maxPlayers: number;
+    playerNames: string[];
+    probed: boolean;
+    pickup: boolean;
+    rcl: boolean;
+    mode: string | null;
+    region: string | null;
+    phase1Label?: string;
+};
+
+export type LiveServersResult = {
+    ok: boolean;
+    fetchedAt?: string;
+    filtered?: number;
+    total?: number;
+    servers?: LiveServerRecord[];
+    error?: string;
 };
 
 const VALID_SCOPES: QueueScope[] = ["open", "beginner", "pro"];
@@ -580,6 +630,58 @@ export async function getQueuePops(options?: {
     return Array.isArray(payload.pops) ? payload.pops : [];
 }
 
+export async function getQueueJoinEvents(options?: {
+    since?: string;
+    limit?: number;
+    scope?: QueueScope;
+    pending?: boolean;
+}): Promise<QueueJoinEventResult[]> {
+    const payload = await queueRequest<{ events?: QueueJoinEventResult[] }>("/api/queue/bot/join-events", {
+        query: {
+            since: options?.since,
+            limit: options?.limit ?? 20,
+            scope: options?.scope ? normalizeQueueScope(options.scope) : undefined,
+            pending: options?.pending ? "1" : undefined,
+        },
+    });
+    return Array.isArray(payload.events) ? payload.events : [];
+}
+
+export async function ackQueueJoinEvents(eventIds: string[]): Promise<number> {
+    if (eventIds.length === 0) return 0;
+    const payload = await queueRequest<{ marked?: number }>("/api/queue/bot/join-events", {
+        method: "POST",
+        body: { eventIds },
+    });
+    return Number(payload.marked || 0);
+}
+
+export async function getQueueLeaveEvents(options?: {
+    since?: string;
+    limit?: number;
+    scope?: QueueScope;
+    pending?: boolean;
+}): Promise<QueueLeaveEventResult[]> {
+    const payload = await queueRequest<{ events?: QueueLeaveEventResult[] }>("/api/queue/bot/leave-events", {
+        query: {
+            since: options?.since,
+            limit: options?.limit ?? 20,
+            scope: options?.scope ? normalizeQueueScope(options.scope) : undefined,
+            pending: options?.pending ? "1" : undefined,
+        },
+    });
+    return Array.isArray(payload.events) ? payload.events : [];
+}
+
+export async function ackQueueLeaveEvents(eventIds: string[]): Promise<number> {
+    if (eventIds.length === 0) return 0;
+    const payload = await queueRequest<{ marked?: number }>("/api/queue/bot/leave-events", {
+        method: "POST",
+        body: { eventIds },
+    });
+    return Number(payload.marked || 0);
+}
+
 export async function simulateQueuePop(options?: {
     mode?: string;
     scope?: QueueScope;
@@ -639,6 +741,34 @@ export async function getPlayerDirectorySnapshot(): Promise<PlayerDirectorySnaps
     return queueRequest<PlayerDirectorySnapshot>("/api/queue/bot/player-directory");
 }
 
+export type QueueRegionPreferenceResult = {
+    ok?: boolean;
+    preferences?: string[];
+    formatted?: string;
+    error?: string;
+};
+
+export async function getQueueRegionPreference(discordUserId: string): Promise<QueueRegionPreferenceResult> {
+    return queueRequest<QueueRegionPreferenceResult>("/api/queue/bot/region-preference", {
+        query: { discordUserId },
+    });
+}
+
+export async function setQueueRegionPreference(
+    discordUserId: string,
+    preferences: string,
+    discordUsername?: string
+): Promise<QueueRegionPreferenceResult> {
+    return queueRequest<QueueRegionPreferenceResult>("/api/queue/bot/region-preference", {
+        method: "POST",
+        body: {
+            discordUserId,
+            discordUsername,
+            preferences,
+        },
+    });
+}
+
 export async function askDashboardAgent(options: {
     message: string;
     sessionId?: string;
@@ -671,6 +801,39 @@ export async function askDashboardAgent(options: {
                 typeof payload.durationMs === "number" && Number.isFinite(payload.durationMs)
                     ? payload.durationMs
                     : 0,
+        };
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
+const LIVE_SERVERS_TIMEOUT_MS = 45_000;
+
+export async function getLiveServers(
+    query: Record<string, string | undefined> = {},
+): Promise<LiveServersResult> {
+    ensureQueueApiConfigured();
+    const params: Record<string, string> = {};
+    for (const [key, value] of Object.entries(query)) {
+        if (value == null) continue;
+        const trimmed = value.trim();
+        if (!trimmed) continue;
+        params[key] = trimmed;
+    }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), LIVE_SERVERS_TIMEOUT_MS);
+    try {
+        const payload = await queueRequest<LiveServersResult>("/api/v1/servers/live", {
+            query: params,
+            signal: controller.signal,
+        });
+        return {
+            ok: !!payload.ok,
+            fetchedAt: payload.fetchedAt,
+            filtered: payload.filtered,
+            total: payload.total,
+            servers: Array.isArray(payload.servers) ? payload.servers : [],
+            error: payload.error,
         };
     } finally {
         clearTimeout(timeout);
